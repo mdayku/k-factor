@@ -53,10 +53,10 @@ model User {
   Authenticator Authenticator[]
 
   // App Relations
-  sentInvites     SignedLink[]  @relation("Referrer")
-  receivedInvites Attribution[] @relation("Referred")
-  events          Event[]
-  experiments     Experiment[]
+  sentInvites      SignedLink[]  @relation("Referrer")
+  receivedInvites  Attribution[] @relation("Referred")
+  events           Event[]
+  experiments      Experiment[]
   tutoringSessions Session[]
 
   @@index([email])
@@ -408,16 +408,16 @@ model Authenticator {
 
 // Parental consent tracking for COPPA
 model ParentalConsent {
-  id             String   @id @default(cuid())
-  childUserId    String
-  parentEmail    String
-  consentToken   String   @unique
-  consentGiven   Boolean  @default(false)
-  consentDate    DateTime?
-  ipAddress      String?
-  userAgent      String?
-  expiresAt      DateTime
-  createdAt      DateTime @default(now())
+  id           String    @id @default(cuid())
+  childUserId  String
+  parentEmail  String
+  consentToken String    @unique
+  consentGiven Boolean   @default(false)
+  consentDate  DateTime?
+  ipAddress    String?
+  userAgent    String?
+  expiresAt    DateTime
+  createdAt    DateTime  @default(now())
 
   @@index([childUserId])
   @@index([parentEmail])
