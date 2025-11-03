@@ -6,13 +6,13 @@
 
 import express from "express";
 import bodyParser from "body-parser";
-import { handleOrchestratorRequest, incrementThrottle } from "./agents/orchestrator";
-import { handlePersonalizationRequest } from "./agents/personalization";
-import { handleIncentivesRequest } from "./agents/incentives";
-import { handleSocialPresenceRequest } from "./agents/social-presence";
-import { handleTutorAdvocacyRequest } from "./agents/tutor-advocacy";
-import { handleTrustSafetyRequest, registerDevice, registerEmail, registerIP, incrementInviteCount } from "./agents/trust-safety";
-import { handleExperimentationRequest, recordMetric, getExperimentStats } from "./agents/experimentation";
+import { handleOrchestratorRequest, incrementThrottle } from "./agents/orchestrator.js";
+import { handlePersonalizationRequest } from "./agents/personalization.js";
+import { handleIncentivesRequest } from "./agents/incentives.js";
+import { handleSocialPresenceRequest } from "./agents/social-presence.js";
+import { handleTutorAdvocacyRequest } from "./agents/tutor-advocacy.js";
+import { handleTrustSafetyRequest, registerDevice, registerEmail, registerIP, incrementInviteCount } from "./agents/trust-safety.js";
+import { handleExperimentationRequest, recordMetric, getExperimentStats } from "./agents/experimentation.js";
 
 const app = express();
 app.use(bodyParser.json());
