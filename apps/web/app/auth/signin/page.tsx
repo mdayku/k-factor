@@ -10,6 +10,7 @@ import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
+import type { Route } from "next";
 
 function SignInForm() {
   const router = useRouter();
@@ -240,7 +241,7 @@ function SignInForm() {
             }}
           >
             <Link
-              href="/auth/reset-password"
+              href={"/auth/reset-password" as Route}
               style={{
                 fontSize: "14px",
                 color: "#0070f3",
