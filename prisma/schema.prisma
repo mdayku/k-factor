@@ -11,19 +11,19 @@ datasource db {
 
 // User profiles with privacy and compliance fields
 model User {
-  id                String   @id @default(cuid())
-  email             String   @unique
-  role              Role     @default(STUDENT)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id        String   @id @default(cuid())
+  email     String   @unique
+  role      Role     @default(STUDENT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Privacy & Compliance
   age               Int?
-  isMinor           Boolean  @default(false)
-  parentalConsent   Boolean  @default(false)
+  isMinor           Boolean   @default(false)
+  parentalConsent   Boolean   @default(false)
   parentEmail       String?
-  coppaCompliant    Boolean  @default(false)
-  optedOutGrowth    Boolean  @default(false)
+  coppaCompliant    Boolean   @default(false)
+  optedOutGrowth    Boolean   @default(false)
   dataRetentionDate DateTime?
 
   // Relations
@@ -230,8 +230,8 @@ model AgenticAction {
 
 // Results pages for async tools (diagnostics, practice tests, etc.)
 model ResultsPage {
-  id      String @id @default(cuid())
-  type    String
+  id   String @id @default(cuid())
+  type String
 
   userId  String
   subject String
