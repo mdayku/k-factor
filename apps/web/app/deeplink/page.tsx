@@ -1,8 +1,8 @@
 "use client";
 import { useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 
-export default function FVM() {
+function FVMContent() {
   const sp = useSearchParams();
   const code = sp.get("code") ?? "na";
   useEffect(() => {
@@ -19,5 +19,13 @@ export default function FVM() {
       body: JSON.stringify({ type:"fvm.reached", ts:new Date().toISOString(), userId:"u2", sessionId:"s2", surface:"web", context:"micro_deck" })
     }), 1500);
   }, [code]);
-  return <main style={{padding:24}}><h1>5-Question Micro-Deck</h1><p>Let’s go!</p></main>
+  return <main style={{padding:24}}><h1>5-Question Micro-Deck</h1><p>Let's go!</p></main>
+}
+
+export default function FVM() {
+  return (
+    <Suspense fallback={<main style={{padding:24}}><h1>Loading...</h1></main>}>
+      <FVMContent />
+    </Suspense>
+  );
 }
