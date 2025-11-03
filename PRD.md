@@ -1,13 +1,34 @@
 # PRD — 10x K-Factor (Production Roadmap)
 
-## 🎯 Current Status: **Phase 1 Complete**
+## 🎯 Current Status: **Phase 1 Complete → Phase 2 Starting**
 
 **All 7 MCP agents implemented** | **Database schema ready** | **25+ event types** | **K-factor tracking live**
+
+**Next:** Synthetic data simulation engine to demonstrate K ≥ 1.20 without real users
 
 ---
 
 ## Goal
 Ship a production-ready **growth spine** that increases K-factor to ≥1.20 via closed-loop viral mechanics while remaining privacy-safe. System delivers ≥4 loops, session transcription → agentic actions, 7 MCP agents, results-page share packs, and live experiment readouts with comprehensive analytics.
+
+## 🎭 Simulation Approach
+
+**Since this is a bootcamp project, actual user metrics will be demonstrated through synthetic data simulation.**
+
+The system will include:
+- **Synthetic User Generator** - Creates realistic user profiles (students, parents, tutors) with appropriate demographics
+- **Behavior Simulation Engine** - Simulates user actions (sessions, invites, conversions, FVM completion)
+- **Event Stream Generator** - Produces realistic event streams with proper timing and distribution
+- **Cohort Simulator** - Simulates control vs. treatment groups for A/B experiments
+- **K-Factor Calculator** - Computes real metrics from simulated data to demonstrate K ≥ 1.20
+
+**Simulation Parameters:**
+- 1,000+ synthetic users across all personas
+- 14-day cohort simulation with realistic time distribution
+- Configurable conversion rates and viral coefficients
+- Fraud injection (5-10 cases) to demonstrate Trust & Safety agent
+- COPPA violations (minors without consent) to test compliance
+- Baseline K = 0.8, target treatment K ≥ 1.20
 
 ## Core Requirements
 
@@ -80,13 +101,21 @@ Diagnostics, practice tests, flashcards produce results pages that:
 - Session transcription: session → summary → agentic action → invite → join → FVM
 
 ## Acceptance Criteria (Bootcamp)
+
+**All metrics demonstrated through synthetic data simulation (no real users required)**
+
 - ✅ ≥4 viral loops functioning E2E with MCP agents
-- ✅ ≥4 agentic actions (≥2 tutor, ≥2 student) triggered from session transcription
-- ✅ Measured K for seeded cohort with pass/fail vs K ≥ 1.20
-- ✅ Demonstrated presence UI and ≥1 leaderboard or cohort room
-- ✅ Compliance memo approved
-- ✅ Results-page sharing active for diagnostics/practice/async tools
-- ✅ 3-minute demo: trigger → invite → join → FVM
+- ⏳ ≥4 agentic actions (≥2 tutor, ≥2 student) triggered from simulated sessions
+- ⏳ **Measured K ≥ 1.20 for treatment cohort** via simulation (vs baseline K = 0.8)
+- ⏳ **Demonstrated +20% FVM lift** in treatment cohort through synthetic data
+- ⏳ **Retention metrics (D1/D7/D28)** computed from simulated user behavior
+- ⏳ Demonstrated presence UI and ≥1 leaderboard with simulated activity
+- ⏳ **Fraud detection working** (5-10 injected fraud cases caught by Trust & Safety agent)
+- ⏳ **COPPA compliance enforced** (minors without consent blocked)
+- ⏳ Compliance memo approved (1-pager)
+- ⏳ Results-page sharing active for diagnostics/practice/async tools
+- ⏳ **Metrics dashboard** showing all success criteria
+- ⏳ 3-minute demo: trigger → invite → join → FVM with live simulation
 
 ## Technical Specifications
 - **MCP Protocol** - JSON-schema contracts between agents
@@ -199,33 +228,69 @@ Diagnostics, practice tests, flashcards produce results pages that:
 - ✅ Experiment stats: `GET /experiment/:name/stats`
 - **Location:** `apps/agents/src/server.ts`
 
-### 🔄 Phase 2: Session Intelligence & Agentic Actions (NEXT)
+### 🔄 Phase 2: Synthetic Data & Simulation Engine (NEXT)
 
-- ⏳ Session transcription service integration
+**Goal:** Generate realistic synthetic data to demonstrate all success metrics
+
+- ⏳ **Synthetic User Generator**
+  - Create 1,000+ user profiles (students, parents, tutors)
+  - Demographics: age, persona, subjects, device types
+  - COPPA cases: minors with/without parental consent
+  - Fraud patterns: duplicate devices, suspicious IPs
+
+- ⏳ **Behavior Simulation Engine**
+  - User journey simulation (session → results → invite → join → FVM)
+  - Realistic timing distributions (peak hours, weekdays vs weekends)
+  - Conversion rate modeling per loop (15-30% invite acceptance)
+  - Retention curves (D1, D7, D28)
+
+- ⏳ **Event Stream Generator**
+  - Generate all 25+ event types with proper context
+  - Time-series event generation (14-day cohort)
+  - Inter-event dependencies (can't have FVM before account creation)
+  - Feed events to agents service for processing
+
+- ⏳ **Cohort & Experiment Simulator**
+  - Control cohort (K = 0.8, baseline behavior)
+  - Treatment cohort (K ≥ 1.20, enhanced loops active)
+  - A/B test assignment and exposure logging
+  - Statistical significance calculation
+
+- ⏳ **Metrics Dashboard**
+  - Live K-factor readout with success flag (K ≥ 1.20)
+  - Funnel visualizations (invite → open → join → FVM)
+  - Cohort comparison charts (control vs treatment)
+  - Agent decision logs and rationales
+
+### ⏳ Phase 3: Session Intelligence & Agentic Actions
+
+- ⏳ Session transcription service (mock for demo)
 - ⏳ AI summary generation from transcripts
 - ⏳ 4 agentic action implementations:
   - Beat-My-Skill Challenge (student)
   - Study Buddy Nudge (student)
   - Parent Progress Reel (tutor)
   - Next-Session Prep Pack Share (tutor)
+- ⏳ Agentic actions integrated with simulation
 
-### ⏳ Phase 3: Enhanced UI & Real-time
+### ⏳ Phase 4: Enhanced UI & Real-time
 
 - ⏳ Share card generation for diagnostics/practice/flashcards
 - ⏳ Deep link generation to FVM
 - ⏳ Real-time presence with WebSockets
-- ⏳ Interactive leaderboards
+- ⏳ Interactive leaderboards with simulated data
 - ⏳ Cohort rooms
+- ⏳ Results page redesign with share functionality
 
-### ⏳ Phase 4: Production Hardening
+### ⏳ Phase 5: Production Hardening & Demo
 
 - ⏳ PostgreSQL setup and migration
 - ⏳ Prisma client integration
 - ⏳ JWT-based authentication
-- ⏳ Role-based access control
 - ⏳ Logging & monitoring
 - ⏳ Testing & CI/CD
-- ⏳ Compliance memo
+- ⏳ Compliance memo (1-pager)
+- ⏳ 3-minute demo video: trigger → invite → join → FVM
 
 ---
 
@@ -234,14 +299,18 @@ Diagnostics, practice tests, flashcards produce results pages that:
 | Criterion | Status | Implementation |
 |-----------|--------|----------------|
 | ≥4 viral loops E2E | 🟢 **Ready** | 8 loops defined, orchestrator implemented |
-| ≥4 agentic actions (≥2 tutor, ≥2 student) | 🟡 **Schema Ready** | Database + events ready, need implementation |
-| Measured K (K ≥ 1.20) | 🟢 **Implemented** | Full K tracking + success validation at `/metrics/k-factor` |
+| ≥4 agentic actions (≥2 tutor, ≥2 student) | 🔴 **Phase 3** | Schema ready, need implementation + simulation |
+| **K ≥ 1.20 via simulation** | 🔴 **Phase 2** | K tracking ready, need synthetic data generator |
+| **+20% FVM lift via simulation** | 🔴 **Phase 2** | Need behavior simulator + cohort comparison |
+| **D1/D7/D28 retention via simulation** | 🔴 **Phase 2** | Need retention curve modeling |
 | 7 MCP agents | 🟢 **Complete** | All 7 agents implemented with rationales |
-| Presence UI + leaderboard | 🟡 **Agent Ready** | Social Presence agent ready, UI needs update |
+| **Fraud detection (5-10 cases)** | 🟡 **Agent Ready** | Trust & Safety ready, need fraud injection in sim |
+| **COPPA compliance enforcement** | 🟡 **Agent Ready** | Age checks ready, need test cases in sim |
+| Presence UI + leaderboard | 🔴 **Phase 4** | Social Presence agent ready, UI + sim data needed |
 | Signed smart links + attribution | 🟢 **Working** | Already functional from MVP |
-| Results-page share pack | 🟡 **Backend Ready** | Personalization agent ready, UI needs implementation |
-| Live K computation | 🟢 **Complete** | Real-time tracking with per-cohort breakdown |
-| 3-minute demo | 🟡 **Partial** | Flow works, needs polish |
+| Results-page share pack | 🔴 **Phase 4** | Backend ready, UI + sim integration needed |
+| **Metrics dashboard** | 🔴 **Phase 2** | Need visualization + live readouts |
+| 3-minute demo with simulation | 🔴 **Phase 5** | All components needed first |
 
 ### Technical Specifications Compliance
 
@@ -360,4 +429,15 @@ With Phase 1 complete, you can:
 - ✅ Store comprehensive event data
 - ✅ Monitor all success metrics
 
-**Ready for:** Session transcription, agentic actions, results-page share packs, real-time presence, database migration
+## 🎯 Next Priority: Phase 2 (Simulation Engine)
+
+**Critical for demo:** All success metrics (K ≥ 1.20, FVM lift, retention, fraud detection) must be demonstrated through synthetic data simulation.
+
+**Phase 2 deliverables:**
+1. Synthetic user generator (1,000+ profiles)
+2. Behavior simulation engine (realistic user journeys)
+3. Event stream generator (14-day cohorts)
+4. Cohort simulator (control vs treatment, K = 0.8 → 1.20+)
+5. Metrics dashboard (live K-factor, funnels, cohort charts)
+
+**Success criteria:** Simulation produces K ≥ 1.20 in treatment cohort with statistical significance, demonstrating all required metrics without real users.

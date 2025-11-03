@@ -6,7 +6,22 @@ A comprehensive **10x K-Factor** growth system for Varsity Tutors with viral mec
 
 **Phase 1 Complete**: Foundation, MCP Agents, Event Schema, Database Schema
 
-See [IMPLEMENTATION_STATUS.md](./IMPLEMENTATION_STATUS.md) for detailed status.
+**Phase 2 Next**: Synthetic data simulation engine to demonstrate all success metrics
+
+See [PRD.md](./PRD.md) for complete requirements and roadmap.
+
+## 🎭 Simulation Approach
+
+**This is a bootcamp project - all metrics are demonstrated through synthetic data simulation (no real users).**
+
+The system includes:
+- **Synthetic User Generator** - 1,000+ realistic profiles (students, parents, tutors)
+- **Behavior Simulation Engine** - User journeys with realistic conversion rates
+- **Event Stream Generator** - 14-day cohort with proper event timing
+- **Cohort Simulator** - Control (K = 0.8) vs Treatment (K ≥ 1.20)
+- **Metrics Dashboard** - Live K-factor, funnels, cohort comparisons
+
+**Target:** Demonstrate K ≥ 1.20, +20% FVM lift, retention metrics, fraud detection, and COPPA compliance through simulation.
 
 ## 🏗 Architecture
 
