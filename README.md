@@ -10,7 +10,8 @@ A comprehensive **10x K-Factor** growth system for Varsity Tutors with viral mec
 **Phase 1 Complete**: Foundation, MCP Agents, Event Schema, Database Schema  
 **Phase 2 Complete**: Simulation engine with synthetic data generation  
 **Phase 3 Complete**: Database deployment (Supabase), seeding, 6 API endpoints  
-**Phase 4 Next**: Enhanced UI & metrics dashboard  
+**Phase 3.5 Complete**: Authentication system (NextAuth.js), COPPA compliance, legal pages  
+**Phase 4 Next**: Results pages, share cards, viral surfaces, presence layer  
 
 See [PRD.md](./PRD.md) for complete requirements and roadmap.
 
@@ -85,10 +86,58 @@ Traffic allocation, exposure logging, K-factor computation, guardrails.
 
 Track via: `GET /metrics/k-factor`
 
+## 🔐 Authentication & User Management
+
+**Status:** Core authentication complete (Phase 3.5)
+
+### Features Implemented
+- ✅ **NextAuth.js v4.24.5** with Prisma adapter
+- ✅ **Email/password authentication** with bcrypt encryption (12 rounds)
+- ✅ **JWT-based sessions** (30-day expiry, secure cookies)
+- ✅ **COPPA compliance** - Age verification, parental consent workflow
+- ✅ **Protected routes** with middleware
+- ✅ **Legal pages** - Terms of Service, Privacy Policy, COPPA Policy
+- ✅ **Database tables** - Account, AuthSession, VerificationToken, Authenticator, ParentalConsent
+
+### Registration Flow
+1. User signs up at `/auth/signup` with email, password, age, role
+2. **Age < 13:** Creates `ParentalConsent` record (7-day expiry)
+   - In production: Email sent to parent with consent link
+   - Parent approves at `/auth/parental-consent?token=...`
+   - Child account activated upon approval
+3. **Age ≥ 13:** Account created immediately
+4. User redirected to `/auth/signin` after successful registration
+
+### Sign-In Flow
+- Visit `/auth/signin`
+- Email/password authentication
+- OAuth providers ready (Google, Apple) - credentials needed
+
+### Environment Setup
+**Critical:** `.env.local` must be in `apps/web/` directory (monorepo requirement)
+
+```env
+DATABASE_URL="postgresql://postgres:...@...pooler.supabase.com:6543/postgres?pgbouncer=true"
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=<generate with: node -e "console.log(require('crypto').randomBytes(32).toString('base64'))">
+```
+
+### Advanced Features (Phase 8 - Post-MVP)
+- ⏳ Email sending (parental consent, password reset)
+- ⏳ Google/Apple OAuth
+- ⏳ Password reset flow
+- ⏳ Email verification
+- ⏳ Multi-factor authentication
+
 ## 🗄 Database Schema
 
-Comprehensive Prisma schema with 13+ tables:
-- **User** - Privacy/compliance fields (COPPA/FERPA)
+Comprehensive Prisma schema with 18+ tables:
+- **User** - Privacy/compliance fields (COPPA/FERPA), auth fields (name, password, emailVerified)
+- **Account** - OAuth provider data (Google, Apple)
+- **AuthSession** - Session management
+- **VerificationToken** - Email verification tokens
+- **Authenticator** - WebAuthn/passkeys
+- **ParentalConsent** - COPPA compliance tracking
 - **SignedLink** - Smart link attribution
 - **Attribution** - Multi-touch tracking
 - **Event** - Comprehensive event log

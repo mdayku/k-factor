@@ -1,11 +1,11 @@
 # PRD — 10x K-Factor (Production Roadmap)
 
-## 🎯 Current Status: **Phase 3 Complete! Phase 4 In Progress 🚀**
+## 🎯 Current Status: **Phase 3.5 Complete! Phase 4 Ready 🚀**
 
-**All 7 MCP agents** | **Simulation engine live** | **Database deployed (Supabase)** | **1,100+ users seeded** | **18,000+ events** | **6 API endpoints** | **✅ Metrics Dashboard Live**
+**All 7 MCP agents** | **Simulation engine live** | **Database deployed (Supabase)** | **1,100+ users seeded** | **18,000+ events** | **6 API endpoints** | **✅ Metrics Dashboard Live** | **✅ Auth System Live**
 
-**Phase 4 Progress:** Dashboard with K-factor, funnel, retention, cohort comparison, agent logs, fraud monitoring  
-**Next Critical:** Phase 3.5 (Authentication & User Management) - then continue Phase 4 (share cards, presence)
+**Latest Milestone:** NextAuth.js integrated, sign-up/sign-in functional, COPPA compliance, legal pages complete  
+**Next Critical:** Phase 4 (Results pages, share cards, viral surfaces, presence layer)
 
 ---
 
@@ -298,51 +298,68 @@ Diagnostics, practice tests, flashcards produce results pages that:
 - ✅ GET /api/metrics/cohort-comparison - Compare control vs treatment
 - ✅ GET /api/agents/decisions - Query agent decision logs
 
-### ⏳ Phase 3.5: Authentication & User Management - NEXT
+### ✅ Phase 3.5: Authentication & User Management - COMPLETE
 
 **Goal:** Implement user authentication, registration, and account management
 
 **Rationale:** Required before UI can have user-specific features, COPPA compliance needs verified accounts
 
+**Status:** Core authentication complete. Advanced features deferred to Phase 8.
+
 **Authentication System:**
-- ⏳ NextAuth.js integration for Next.js
-- ⏳ Email/password authentication
-- ⏳ OAuth providers (Google, Apple for "Sign in with...")
-- ⏳ Session management with secure cookies
-- ⏳ Password reset flow via email
-- ⏳ Protected routes and middleware
+- ✅ NextAuth.js v4.24.5 integration with Prisma adapter
+- ✅ Email/password authentication with bcrypt encryption
+- ✅ Session management with JWT (30-day expiry)
+- ✅ Protected routes and middleware
+- ✅ Database schema with auth tables (Account, AuthSession, VerificationToken, Authenticator)
+- 🔄 OAuth providers (Google, Apple) → **Phase 8**
+- 🔄 Password reset flow via email → **Phase 8**
 
 **Registration Flow:**
-- ⏳ Sign-up form with email verification
-- ⏳ Age verification (COPPA compliance)
-- ⏳ Parental consent workflow for users < 13
-  - Collect parent email
-  - Send verification email to parent
-  - Parent must approve before child account activates
-- ⏳ Role selection (student/parent/tutor)
-- ⏳ Profile setup (name, grade level, subjects)
+- ✅ Sign-up form (`/auth/signup`)
+- ✅ Age verification (COPPA compliance)
+- ✅ Parental consent workflow for users < 13
+  - ✅ Collect parent email
+  - ✅ Generate consent tokens (7-day expiry)
+  - ✅ Consent verification page (`/auth/parental-consent`)
+  - 🔄 Send verification email to parent → **Phase 8**
+- ✅ Role selection (student/parent/tutor)
+- ✅ Password strength requirements
+- ✅ Terms & Privacy acceptance
+- ⏳ Profile setup (name, grade level, subjects) - **Optional/Phase 4**
 
 **User Profile & Settings:**
-- ⏳ Profile management page
-- ⏳ Account settings (email, password change)
-- ⏳ Notification preferences (email, push, SMS)
-- ⏳ Privacy settings
-- ⏳ Opt-out UI for growth communications
-- ⏳ Account deletion (GDPR right to be forgotten)
+- ⏳ Profile management page - **Optional/Phase 4**
+- ⏳ Account settings (email, password change) - **Optional/Phase 4**
+- ⏳ Notification preferences (email, push, SMS) - **Optional/Phase 4**
+- ⏳ Privacy settings - **Optional/Phase 4**
+- ⏳ Opt-out UI for growth communications - **Optional/Phase 4**
+- ⏳ Account deletion (GDPR right to be forgotten) - **Optional/Phase 4**
 
 **Legal & Compliance Pages:**
-- ⏳ Terms of Service page
-- ⏳ Privacy Policy page
-- ⏳ Cookie consent banner
-- ⏳ COPPA consent forms for parents
-- ⏳ FERPA compliance documentation
+- ✅ Terms of Service page (`/legal/terms`)
+- ✅ Privacy Policy page (`/legal/privacy`)
+- ✅ COPPA Policy page (`/legal/coppa`)
+- ⏳ Cookie consent banner - **Optional/Phase 4**
 
 **Onboarding Flow:**
-- ⏳ First-time user welcome wizard
-- ⏳ Product tour / tutorial
-- ⏳ Initial preferences setup
-- ⏳ Sample FVM experience (try before committing)
-- ⏳ Friend import/invite from onboarding
+- ⏳ First-time user welcome wizard - **Optional/Phase 4**
+- ⏳ Product tour / tutorial - **Optional/Phase 4**
+- ⏳ Initial preferences setup - **Optional/Phase 4**
+- ⏳ Sample FVM experience (try before committing) - **Optional/Phase 4**
+- ⏳ Friend import/invite from onboarding - **Optional/Phase 4**
+
+**Technical Highlights:**
+- Bcrypt password hashing (12 rounds)
+- JWT-based sessions with secure cookies
+- CSRF protection (NextAuth built-in)
+- SQL injection prevention (Prisma)
+- ParentalConsent table with audit trail (IP, user agent)
+- Database fields: emailNotifications, pushNotifications, smsNotifications, hasCompletedOnboarding
+- Custom NextAuth callbacks for role-based access
+- Middleware for automatic redirect to `/onboarding` if profile incomplete
+- Environment setup: `.env.local` in `apps/web/` (monorepo requirement)
+- Manual migration via Supabase SQL Editor (network restrictions workaround)
 
 ### ⏳ Phase 4: Enhanced UI & Real-time (Deliverables #1, #5, #8)
 
@@ -625,6 +642,68 @@ Diagnostics, practice tests, flashcards produce results pages that:
   - Security audit of exposed endpoints
   - Final CI/CD run validation
 
+### ⏳ Phase 8: Advanced Auth & Communications (Post-MVP)
+
+**Goal:** Implement advanced authentication features and email/SMS infrastructure
+
+**Rationale:** Core auth is functional for MVP. These features enhance UX but aren't blocking for demo.
+
+**Priority:** Post-MVP / Production Hardening
+
+**Email & SMS Infrastructure:**
+- ⏳ Email service provider setup (SendGrid, Postmark, or AWS SES)
+- ⏳ SMTP configuration and testing
+- ⏳ Email templates system
+- ⏳ SMS provider integration (Twilio)
+- ⏳ Delivery tracking and bounce handling
+- ⏳ Unsubscribe management
+
+**Parental Consent Email Flow:**
+- ⏳ Send verification email when child account is created
+- ⏳ Email template with consent link
+- ⏳ Resend consent email functionality
+- ⏳ Email confirmation upon parent approval
+- ⏳ Reminder emails for pending consents
+
+**Password Reset Flow:**
+- ⏳ "Forgot password" page
+- ⏳ Password reset email generation
+- ⏳ Token-based reset link (uses existing VerificationToken table)
+- ⏳ Password update endpoint with bcrypt
+- ⏳ Success confirmation email
+
+**OAuth Providers:**
+- ⏳ Google OAuth setup
+  - Create Google Cloud project
+  - Configure OAuth 2.0 credentials
+  - Add authorized redirect URIs
+  - Test sign-in flow
+- ⏳ Apple Sign In setup
+  - Apple Developer account
+  - Configure services ID
+  - Generate client secret
+  - Test sign-in flow
+- ⏳ OAuth account linking (merge email accounts)
+
+**Email Verification:**
+- ⏳ Send verification email on signup
+- ⏳ Verification link handling
+- ⏳ Mark email as verified in database
+- ⏳ Resend verification email
+
+**Advanced Features:**
+- ⏳ Remember me functionality
+- ⏳ Session renewal/refresh logic
+- ⏳ Multi-factor authentication (Authenticator table ready)
+- ⏳ Magic link authentication
+- ⏳ Account recovery options
+
+**Dependencies:**
+- Nodemailer 7.1.0 (already installed)
+- Email service provider API keys
+- SMS service provider API keys
+- OAuth client credentials
+
 ---
 
 ## 📈 Acceptance Criteria Status
@@ -747,42 +826,6 @@ pnpm dev
 
 ---
 
-## 🎓 What's Enabled Now
-
-With Phase 1 complete, you can:
-
-- ✅ Make agent decisions with full auditability
-- ✅ Track K-factor in real-time with success validation
-- ✅ Detect fraud and ensure COPPA compliance
-- ✅ Run A/B experiments with cohort tracking
-- ✅ Generate personalized copy for any persona
-- ✅ Validate unit economics before rewarding
-- ✅ Track social presence and recommend cohorts
-- ✅ Generate tutor share packs automatically
-- ✅ Store comprehensive event data
-- ✅ Monitor all success metrics
-
-## 🎯 Current Status: Phase 2 Complete! 🎉
-
-**Phase 2 (Simulation Engine) - COMPLETE**
-
-All core simulation components are implemented and ready to demonstrate metrics:
-
-✅ **Completed:**
-1. ✅ Synthetic user generator (1,000+ profiles with demographics, COPPA cases, fraud patterns)
-2. ✅ Behavior simulation engine (realistic user journeys with control K=0.8, treatment K≥1.20)
-3. ✅ Event stream generator (full 14-day cohorts with 25+ event types)
-4. ✅ Cohort simulator (A/B testing with statistical significance)
-5. ✅ CLI simulation runner (`pnpm --filter simulation run simulate`)
-6. ✅ Fraud injection (5-10 patterns for Trust & Safety demonstration)
-7. ✅ COPPA test cases (minors with/without consent)
-
-**Current deliverable:** Run `pnpm --filter simulation run simulate` to see full A/B experiment results with K-factor, retention, FVM lift, and referral mix metrics!
-
-**Note:** Visual metrics dashboard moved to Phase 4 (UI work) - CLI provides all metrics for now.
-
----
-
 ## 📋 Bootcamp Deliverables Checklist
 
 **Required deliverables from bootcamp brief:**
@@ -825,13 +868,13 @@ All core simulation components are implemented and ready to demonstrate metrics:
 - **Metrics:** K, invites/user, conversion, FVM, retention (D1/D7/D28), guardrails, fraud detection, COPPA compliance
 
 ### 6. 🟡 Copy Kit: Dynamic Templates by Persona
-- 🟡 **Status:** Partially implemented
-- **Location:** `apps/agents/src/agents/personalization.ts`
-- **Templates:** Buddy Challenge, Streak Rescue, Proud Parent, Tutor Spotlight
+- 🟡 **Status:** Core templates implemented in Personalization Agent, extraction scheduled for Phase 7
+- **Current Location:** `apps/agents/src/agents/personalization.ts`
+- **Templates:** Buddy Challenge, Streak Rescue, Proud Parent, Tutor Spotlight, Results Rally, Class Watch-Party, Subject Clubs, Achievement Spotlight
 - **Tones:** Friendly, motivational, professional, playful
 - **Personas:** Student, parent, tutor
 - **Localization:** English only (extensible for i18n)
-- **TODO:** Extract to separate copy kit file/service
+- **Phase 7 Task:** Extract templates to standalone copy kit service with API endpoint, versioning for A/B testing, and documentation
 
 ### 7. ⏳ Risk & Compliance Memo (1-Pager)
 - ⏳ **Status:** Phase 6
@@ -871,14 +914,14 @@ All core simulation components are implemented and ready to demonstrate metrics:
 
 | Deliverable | Status | Phase | Notes |
 |-------------|--------|-------|-------|
-| 1. Thin-slice prototype | ✅ Complete | Phase 1 | Web app functional, needs real-time layer |
+| 1. Thin-slice prototype | ✅ Complete | Phases 1-3 | Web app, auth, dashboard functional |
 | 2. MCP agents (7 total) | ✅ Complete | Phase 1 | All implemented with rationales |
-| 3. Session transcription → agentic actions | ⏳ Pending | Phase 3 | Schema ready, need implementation |
+| 3. Session transcription → agentic actions | ⏳ Pending | Phase 5 | Schema ready, need implementation |
 | 4. Signed smart links + attribution | ✅ Complete | MVP | Working end-to-end |
-| 5. Event spec & dashboards | 🟡 Partial | Phases 1-2 | Events done, dashboards in Phase 2 |
-| 6. Copy kit | 🟡 Partial | Phase 1 | Core templates done, need extraction |
-| 7. Compliance memo | ⏳ Pending | Phase 6 | Schema supports all requirements |
-| 8. Results-page share packs | ⏳ Pending | Phase 4 | Backend ready, UI needed |
-| 9. 3-minute demo | ⏳ Pending | Phase 6 | Requires all above + simulation |
+| 5. Event spec & dashboards | ✅ Complete | Phases 1-3 | Events done, simulation complete, dashboard live |
+| 6. Copy kit | 🟡 Partial | Phase 7 | Templates in agent, extraction pending |
+| 7. Compliance memo | ⏳ Pending | Phase 7 | Schema supports all requirements |
+| 8. Results-page share packs | ⏳ Pending | Phase 4 | Backend ready, UI + image gen needed |
+| 9. 3-minute demo | ⏳ Pending | Phase 7 | Requires all components complete |
 
-**Overall Progress:** 2/9 complete ✅ | 2/9 partial 🟡 | 5/9 pending ⏳
+**Overall Progress:** 3/9 complete ✅ | 1/9 partial 🟡 | 5/9 pending ⏳
