@@ -47,13 +47,14 @@ enum Role {
 
 // Signed smart links with attribution
 model SignedLink {
-  id         String   @id @default(cuid())
-  shortCode  String   @unique
-  signature  String
+  id        String @id @default(cuid())
+  shortCode String @unique
+  signature String
+
   // Payload data
-  persona    String // student, parent, tutor
-  context    String // results, streak_risk, post_session, badge_earned
-  loop       String // buddy_challenge, streak_rescue, proud_parent, tutor_spotlight
+  persona String
+  context String
+  loop    String
 
   referrerId String
   referrer   User   @relation("Referrer", fields: [referrerId], references: [id])
@@ -84,7 +85,7 @@ model Attribution {
   user   User   @relation("Referred", fields: [userId], references: [id])
 
   // Touchpoint tracking
-  touchpoint String // opened, clicked, joined, fvm_reached
+  touchpoint String
   ipAddress  String?
   userAgent  String?
   deviceId   String?
@@ -99,14 +100,14 @@ model Attribution {
 
 // Event tracking for analytics
 model Event {
-  id     String @id @default(cuid())
-  type   String // invite.sent, invite.opened, account.created, fvm.reached
+  id   String @id @default(cuid())
+  type String
 
   userId String?
   user   User?   @relation(fields: [userId], references: [id])
 
   sessionId String?
-  surface   String // results, practice, ai_tutor, cohort_room, email, sms, push, web
+  surface   String
 
   // Loop context
   loop         String?
@@ -132,7 +133,7 @@ model Experiment {
   userId String
   user   User   @relation(fields: [userId], references: [id])
 
-  cohort  String // A, B, control, variant
+  cohort  String
   variant String?
 
   assignedAt DateTime @default(now())
@@ -151,13 +152,13 @@ model Loop {
 
   // Configuration
   active      Boolean @default(true)
-  triggers    Json // Array of trigger conditions
-  eligibility Json // Eligibility rules
-  rewards     Json // Reward configuration
-  throttle    Json? // Rate limiting config
+  triggers    Json
+  eligibility Json
+  rewards     Json
+  throttle    Json?
 
   // Personalization
-  copyTemplates Json // Copy variants by persona
+  copyTemplates Json
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -167,10 +168,10 @@ model Loop {
 
 // Session transcription and summaries
 model Session {
-  id     String @id @default(cuid())
-  type   String // live_1on1, instant, ai_tutor, class
+  id   String @id @default(cuid())
+  type String
 
-  userId String // Student
+  userId String
   user   User   @relation(fields: [userId], references: [id])
 
   tutorId String?
@@ -179,12 +180,12 @@ model Session {
   // Transcription
   transcribed   Boolean @default(false)
   transcription String? @db.Text
-  summary       Json? // AI-generated summary with skill gaps, wins, etc.
+  summary       Json?
 
   // Session data
   startedAt DateTime
   endedAt   DateTime?
-  duration  Int? // seconds
+  duration  Int?
   rating    Float?
 
   // Agentic actions triggered
@@ -202,17 +203,17 @@ model Session {
 // Agentic actions triggered from sessions
 model AgenticAction {
   id   String @id @default(cuid())
-  type String // beat_my_skill, study_buddy_nudge, parent_progress_reel, prep_pack_share
+  type String
 
   sessionId String
   session   Session @relation(fields: [sessionId], references: [id])
 
-  targetPersona String // student, tutor, parent
+  targetPersona String
 
   // Action details
-  payload     Json // Action-specific data (deck, invite link, etc.)
-  executed    Boolean   @default(false)
-  executedAt  DateTime?
+  payload    Json
+  executed   Boolean   @default(false)
+  executedAt DateTime?
 
   // Viral tracking
   invitesSent   Int @default(0)
@@ -230,15 +231,15 @@ model AgenticAction {
 // Results pages for async tools (diagnostics, practice tests, etc.)
 model ResultsPage {
   id      String @id @default(cuid())
-  type    String // diagnostic, practice_test, flashcards, skill_check
+  type    String
 
   userId  String
   subject String
 
   // Results data
   score           Float
-  skillsHeatmap   Json // Skills and proficiency levels
-  recommendations Json // Next steps
+  skillsHeatmap   Json
+  recommendations Json
 
   // Share tracking
   shareCardGenerated Boolean @default(false)
@@ -254,19 +255,19 @@ model ResultsPage {
 
 // Agent decision logs for auditability
 model AgentDecision {
-  id       String @id @default(cuid())
-  agent    String // orchestrator, personalization, incentives, social_presence, tutor_advocacy, trust_safety, experimentation
+  id    String @id @default(cuid())
+  agent String
 
-  decision     Json // The decision made
-  rationale    String // Explanation for auditability
-  featuresUsed Json // Features/context used in decision
+  decision     Json
+  rationale    String
+  featuresUsed Json
 
   // Context
   userId    String?
   sessionId String?
   loop      String?
 
-  latencyMs Int? // Decision latency
+  latencyMs Int?
 
   createdAt DateTime @default(now())
 
@@ -284,8 +285,8 @@ model FraudFlag {
   ipAddress String?
   email     String?
 
-  reason   String // duplicate_device, suspicious_pattern, high_velocity, etc.
-  severity String // low, medium, high, critical
+  reason   String
+  severity String
 
   resolved   Boolean   @default(false)
   resolvedAt DateTime?
@@ -306,7 +307,7 @@ model Complaint {
   userId String?
   email  String?
 
-  type        String  // spam, privacy, harassment, other
+  type        String
   description String? @db.Text
 
   resolved   Boolean   @default(false)
