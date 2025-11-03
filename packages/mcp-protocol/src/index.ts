@@ -26,7 +26,7 @@ export const MCPResponse = z.object({
 // Agent-specific request/response schemas
 
 // 1. Loop Orchestrator Agent
-export const OrchestratoreRequest = MCPRequest.extend({
+export const OrchestratorRequest = MCPRequest.extend({
   trigger: z.enum(["post_session", "results_page", "streak_risk", "badge_earned", "milestone", "cohort_join"]),
   persona: z.enum(["student", "parent", "tutor"]),
   userId: z.string(),
@@ -215,7 +215,7 @@ export const ExperimentationResponse = MCPResponse.extend({
 });
 
 // Type exports
-export type OrchestratoreRequest = z.infer<typeof OrchestratoreRequest>;
+export type OrchestratorRequest = z.infer<typeof OrchestratorRequest>;
 export type OrchestratorResponse = z.infer<typeof OrchestratorResponse>;
 export type PersonalizationRequest = z.infer<typeof PersonalizationRequest>;
 export type PersonalizationResponse = z.infer<typeof PersonalizationResponse>;
