@@ -25,7 +25,7 @@ model User {
   coppaCompliant    Boolean   @default(false)
   optedOutGrowth    Boolean   @default(false)
   dataRetentionDate DateTime?
-  
+
   // Simulation tracking
   isSimulated  Boolean @default(false)
   simulationId String?
@@ -122,7 +122,7 @@ model Event {
   // Metadata
   metadata  Json?
   createdAt DateTime @default(now())
-  
+
   // Simulation tracking
   isSimulated  Boolean @default(false)
   simulationId String?
