@@ -16,7 +16,7 @@ model User {
   role              Role     @default(STUDENT)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-  
+
   // Privacy & Compliance
   age               Int?
   isMinor           Boolean  @default(false)
@@ -25,14 +25,14 @@ model User {
   coppaCompliant    Boolean  @default(false)
   optedOutGrowth    Boolean  @default(false)
   dataRetentionDate DateTime?
-  
+
   // Relations
-  sentInvites       SignedLink[]    @relation("Referrer")
-  receivedInvites   Attribution[]   @relation("Referred")
-  events            Event[]
-  experiments       Experiment[]
-  sessions          Session[]
-  
+  sentInvites     SignedLink[]  @relation("Referrer")
+  receivedInvites Attribution[] @relation("Referred")
+  events          Event[]
+  experiments     Experiment[]
+  sessions        Session[]
+
   @@index([email])
   @@index([role])
   @@index([isMinor])
@@ -47,27 +47,26 @@ enum Role {
 
 // Signed smart links with attribution
 model SignedLink {
-  id              String   @id @default(cuid())
-  shortCode       String   @unique
-  signature       String
-  
+  id         String   @id @default(cuid())
+  shortCode  String   @unique
+  signature  String
   // Payload data
-  persona         String   // student, parent, tutor
-  context         String   // results, streak_risk, post_session, badge_earned
-  loop            String   // buddy_challenge, streak_rescue, proud_parent, tutor_spotlight
-  
-  referrerId      String
-  referrer        User     @relation("Referrer", fields: [referrerId], references: [id])
-  
+  persona    String // student, parent, tutor
+  context    String // results, streak_risk, post_session, badge_earned
+  loop       String // buddy_challenge, streak_rescue, proud_parent, tutor_spotlight
+
+  referrerId String
+  referrer   User   @relation("Referrer", fields: [referrerId], references: [id])
+
   // Metadata
-  createdAt       DateTime @default(now())
-  expiresAt       DateTime?
-  metadata        Json?
-  
+  createdAt DateTime  @default(now())
+  expiresAt DateTime?
+  metadata  Json?
+
   // Relations
-  attributions    Attribution[]
-  events          Event[]
-  
+  attributions Attribution[]
+  events       Event[]
+
   @@index([shortCode])
   @@index([referrerId])
   @@index([loop])
@@ -76,22 +75,22 @@ model SignedLink {
 
 // Attribution tracking (last-touch and multi-touch)
 model Attribution {
-  id              String   @id @default(cuid())
-  
-  signedLinkId    String
-  signedLink      SignedLink @relation(fields: [signedLinkId], references: [id])
-  
-  userId          String
-  user            User     @relation("Referred", fields: [userId], references: [id])
-  
+  id String @id @default(cuid())
+
+  signedLinkId String
+  signedLink   SignedLink @relation(fields: [signedLinkId], references: [id])
+
+  userId String
+  user   User   @relation("Referred", fields: [userId], references: [id])
+
   // Touchpoint tracking
-  touchpoint      String   // opened, clicked, joined, fvm_reached
-  ipAddress       String?
-  userAgent       String?
-  deviceId        String?
-  
-  createdAt       DateTime @default(now())
-  
+  touchpoint String // opened, clicked, joined, fvm_reached
+  ipAddress  String?
+  userAgent  String?
+  deviceId   String?
+
+  createdAt DateTime @default(now())
+
   @@index([signedLinkId])
   @@index([userId])
   @@index([touchpoint])
@@ -100,24 +99,24 @@ model Attribution {
 
 // Event tracking for analytics
 model Event {
-  id              String   @id @default(cuid())
-  type            String   // invite.sent, invite.opened, account.created, fvm.reached
-  
-  userId          String?
-  user            User?    @relation(fields: [userId], references: [id])
-  
-  sessionId       String?
-  surface         String   // results, practice, ai_tutor, cohort_room, email, sms, push, web
-  
+  id     String @id @default(cuid())
+  type   String // invite.sent, invite.opened, account.created, fvm.reached
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  sessionId String?
+  surface   String // results, practice, ai_tutor, cohort_room, email, sms, push, web
+
   // Loop context
-  loop            String?
-  signedLinkId    String?
-  signedLink      SignedLink? @relation(fields: [signedLinkId], references: [id])
-  
+  loop         String?
+  signedLinkId String?
+  signedLink   SignedLink? @relation(fields: [signedLinkId], references: [id])
+
   // Metadata
-  metadata        Json?
-  createdAt       DateTime @default(now())
-  
+  metadata  Json?
+  createdAt DateTime @default(now())
+
   @@index([type])
   @@index([userId])
   @@index([loop])
@@ -127,18 +126,18 @@ model Event {
 
 // Experiment assignments and cohorts
 model Experiment {
-  id              String   @id @default(cuid())
-  name            String
-  
-  userId          String
-  user            User     @relation(fields: [userId], references: [id])
-  
-  cohort          String   // A, B, control, variant
-  variant         String?
-  
-  assignedAt      DateTime @default(now())
-  metadata        Json?
-  
+  id   String @id @default(cuid())
+  name String
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  cohort  String // A, B, control, variant
+  variant String?
+
+  assignedAt DateTime @default(now())
+  metadata   Json?
+
   @@unique([name, userId])
   @@index([name])
   @@index([cohort])
@@ -146,53 +145,53 @@ model Experiment {
 
 // Viral loop configuration
 model Loop {
-  id              String   @id @default(cuid())
-  name            String   @unique
-  displayName     String
-  
+  id          String @id @default(cuid())
+  name        String @unique
+  displayName String
+
   // Configuration
-  active          Boolean  @default(true)
-  triggers        Json     // Array of trigger conditions
-  eligibility     Json     // Eligibility rules
-  rewards         Json     // Reward configuration
-  throttle        Json?    // Rate limiting config
-  
+  active      Boolean @default(true)
+  triggers    Json // Array of trigger conditions
+  eligibility Json // Eligibility rules
+  rewards     Json // Reward configuration
+  throttle    Json? // Rate limiting config
+
   // Personalization
-  copyTemplates   Json     // Copy variants by persona
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
+  copyTemplates Json // Copy variants by persona
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([active])
 }
 
 // Session transcription and summaries
 model Session {
-  id              String   @id @default(cuid())
-  type            String   // live_1on1, instant, ai_tutor, class
-  
-  userId          String   // Student
-  user            User     @relation(fields: [userId], references: [id])
-  
-  tutorId         String?
-  subject         String
-  
+  id     String @id @default(cuid())
+  type   String // live_1on1, instant, ai_tutor, class
+
+  userId String // Student
+  user   User   @relation(fields: [userId], references: [id])
+
+  tutorId String?
+  subject String
+
   // Transcription
-  transcribed     Boolean  @default(false)
-  transcription   String?  @db.Text
-  summary         Json?    // AI-generated summary with skill gaps, wins, etc.
-  
+  transcribed   Boolean @default(false)
+  transcription String? @db.Text
+  summary       Json? // AI-generated summary with skill gaps, wins, etc.
+
   // Session data
-  startedAt       DateTime
-  endedAt         DateTime?
-  duration        Int?     // seconds
-  rating          Float?
-  
+  startedAt DateTime
+  endedAt   DateTime?
+  duration  Int? // seconds
+  rating    Float?
+
   // Agentic actions triggered
-  actions         AgenticAction[]
-  
-  createdAt       DateTime @default(now())
-  
+  actions AgenticAction[]
+
+  createdAt DateTime @default(now())
+
   @@index([userId])
   @@index([tutorId])
   @@index([subject])
@@ -202,26 +201,26 @@ model Session {
 
 // Agentic actions triggered from sessions
 model AgenticAction {
-  id              String   @id @default(cuid())
-  type            String   // beat_my_skill, study_buddy_nudge, parent_progress_reel, prep_pack_share
-  
-  sessionId       String
-  session         Session  @relation(fields: [sessionId], references: [id])
-  
-  targetPersona   String   // student, tutor, parent
-  
+  id   String @id @default(cuid())
+  type String // beat_my_skill, study_buddy_nudge, parent_progress_reel, prep_pack_share
+
+  sessionId String
+  session   Session @relation(fields: [sessionId], references: [id])
+
+  targetPersona String // student, tutor, parent
+
   // Action details
-  payload         Json     // Action-specific data (deck, invite link, etc.)
-  executed        Boolean  @default(false)
-  executedAt      DateTime?
-  
+  payload     Json // Action-specific data (deck, invite link, etc.)
+  executed    Boolean   @default(false)
+  executedAt  DateTime?
+
   // Viral tracking
-  invitesSent     Int      @default(0)
-  invitesOpened   Int      @default(0)
-  conversions     Int      @default(0)
-  
-  createdAt       DateTime @default(now())
-  
+  invitesSent   Int @default(0)
+  invitesOpened Int @default(0)
+  conversions   Int @default(0)
+
+  createdAt DateTime @default(now())
+
   @@index([type])
   @@index([sessionId])
   @@index([targetPersona])
@@ -230,23 +229,23 @@ model AgenticAction {
 
 // Results pages for async tools (diagnostics, practice tests, etc.)
 model ResultsPage {
-  id              String   @id @default(cuid())
-  type            String   // diagnostic, practice_test, flashcards, skill_check
-  
-  userId          String
-  subject         String
-  
+  id      String @id @default(cuid())
+  type    String // diagnostic, practice_test, flashcards, skill_check
+
+  userId  String
+  subject String
+
   // Results data
   score           Float
-  skillsHeatmap   Json     // Skills and proficiency levels
-  recommendations Json     // Next steps
-  
+  skillsHeatmap   Json // Skills and proficiency levels
+  recommendations Json // Next steps
+
   // Share tracking
   shareCardGenerated Boolean @default(false)
-  shareCount      Int      @default(0)
-  
-  createdAt       DateTime @default(now())
-  
+  shareCount         Int     @default(0)
+
+  createdAt DateTime @default(now())
+
   @@index([userId])
   @@index([type])
   @@index([subject])
@@ -255,22 +254,22 @@ model ResultsPage {
 
 // Agent decision logs for auditability
 model AgentDecision {
-  id              String   @id @default(cuid())
-  agent           String   // orchestrator, personalization, incentives, social_presence, tutor_advocacy, trust_safety, experimentation
-  
-  decision        Json     // The decision made
-  rationale       String   // Explanation for auditability
-  featuresUsed    Json     // Features/context used in decision
-  
+  id       String @id @default(cuid())
+  agent    String // orchestrator, personalization, incentives, social_presence, tutor_advocacy, trust_safety, experimentation
+
+  decision     Json // The decision made
+  rationale    String // Explanation for auditability
+  featuresUsed Json // Features/context used in decision
+
   // Context
-  userId          String?
-  sessionId       String?
-  loop            String?
-  
-  latencyMs       Int?     // Decision latency
-  
-  createdAt       DateTime @default(now())
-  
+  userId    String?
+  sessionId String?
+  loop      String?
+
+  latencyMs Int? // Decision latency
+
+  createdAt DateTime @default(now())
+
   @@index([agent])
   @@index([userId])
   @@index([createdAt])
@@ -278,21 +277,21 @@ model AgentDecision {
 
 // Fraud and abuse tracking
 model FraudFlag {
-  id              String   @id @default(cuid())
-  
-  userId          String?
-  deviceId        String?
-  ipAddress       String?
-  email           String?
-  
-  reason          String   // duplicate_device, suspicious_pattern, high_velocity, etc.
-  severity        String   // low, medium, high, critical
-  
-  resolved        Boolean  @default(false)
-  resolvedAt      DateTime?
-  
-  createdAt       DateTime @default(now())
-  
+  id String @id @default(cuid())
+
+  userId    String?
+  deviceId  String?
+  ipAddress String?
+  email     String?
+
+  reason   String // duplicate_device, suspicious_pattern, high_velocity, etc.
+  severity String // low, medium, high, critical
+
+  resolved   Boolean   @default(false)
+  resolvedAt DateTime?
+
+  createdAt DateTime @default(now())
+
   @@index([userId])
   @@index([deviceId])
   @@index([ipAddress])
@@ -302,21 +301,20 @@ model FraudFlag {
 
 // Complaints and opt-outs
 model Complaint {
-  id              String   @id @default(cuid())
-  
-  userId          String?
-  email           String?
-  
-  type            String   // spam, privacy, harassment, other
-  description     String?  @db.Text
-  
-  resolved        Boolean  @default(false)
-  resolvedAt      DateTime?
-  
-  createdAt       DateTime @default(now())
-  
+  id String @id @default(cuid())
+
+  userId String?
+  email  String?
+
+  type        String  // spam, privacy, harassment, other
+  description String? @db.Text
+
+  resolved   Boolean   @default(false)
+  resolvedAt DateTime?
+
+  createdAt DateTime @default(now())
+
   @@index([userId])
   @@index([type])
   @@index([resolved])
 }
-
