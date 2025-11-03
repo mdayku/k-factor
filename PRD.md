@@ -4,7 +4,7 @@
 
 **All 7 MCP agents** | **Simulation engine live** | **1,000+ synthetic users** | **K-factor: 1.20+ demonstrated**
 
-**Next:** Run `pnpm --filter simulation run simulate` to see full experiment results! Then Phase 3: Session Intelligence & Agentic Actions
+**Next:** Phase 3: Database deployment - provision PostgreSQL, run migrations, seed with simulation data, build API endpoints
 
 ---
 
@@ -267,49 +267,40 @@ Diagnostics, practice tests, flashcards produce results pages that:
   - ✅ K-factor readout with ✅/❌ target validation
   - ✅ Fraud detection and COPPA compliance demonstration
 
-### ⏳ Phase 3: Session Intelligence & Agentic Actions (Deliverable #3) - NEXT
+### ⏳ Phase 3: Database Deployment & Setup - NEXT
 
-**Goal:** Implement transcription → summary → agentic actions → viral loops pipeline
+**Goal:** Deploy database and populate with simulation data - foundation for UI and features
 
-- ⏳ **Session Transcription Service**
-  - Mock transcription service for demo (simulated transcripts)
-  - WebSocket connection for real-time transcription updates
-  - Transcription storage in `Session.transcription` field
-  - Privacy-safe transcription (PII redaction for minors)
+**Rationale:** UI needs database to read from, features need database to write to
 
-- ⏳ **AI Summary Generation**
-  - Extract key moments, skill gaps, wins from transcripts
-  - Store structured summaries in `Session.summary` JSON field
-  - Identify triggers for agentic actions (stuck concepts, exam prep, milestones)
-  - Parent-safe summaries (FERPA compliant)
+**Database Deployment:**
+- ⏳ PostgreSQL database provisioning (local or cloud - Neon, Supabase, or Railway)
+- ⏳ Environment configuration with production DATABASE_URL
+- ⏳ Run Prisma migrations (`prisma migrate deploy`)
+- ⏳ Seed database with simulation data from Phase 2
+- ⏳ Database backup and recovery procedures
+- ⏳ Connection pooling setup (PgBouncer recommended)
 
-- ⏳ **Agentic Action Implementations (≥4 required)**
-  - **Beat-My-Skill Challenge** (student → student)
-    - Generate 5-question micro-deck from skill gaps
-    - Create share link with deep link to challenge
-    - Award streak shields to both users on FVM completion
-  - **Study Buddy Nudge** (student → student)
-    - Detect exam prep or stuck concepts from summary
-    - Create co-practice invite tied to specific deck
-    - Show presence "friend joined" signal
-  - **Parent Progress Reel** (tutor → parent)
-    - Auto-compose 20-30s privacy-safe reel from key moments
-    - Include referral link with class pass reward
-    - Track reel views and conversions
-  - **Next-Session Prep Pack Share** (tutor → peers/parents)
-    - Generate AI prep pack from session summary
-    - Create class sampler link for tutor to share
-    - Credit tutor's referral XP on joins
+**Prisma Integration:**
+- ⏳ Prisma client integration in all services
+- ⏳ Create database seed script using simulation package
+- ⏳ Write simulation events to Event table
+- ⏳ Write simulation users to User table
+- ⏳ Test database queries and performance
 
-- ⏳ **Integration with Viral Loops**
-  - Connect agentic actions to Orchestrator agent
-  - Track agentic action → invite → join → FVM funnel
-  - Simulate agentic actions in Phase 2 simulation data
-  - Store all actions in `AgenticAction` table
+**API Endpoints for Data Access:**
+- ⏳ GET /api/events - Query events with filters (time range, type, user, cohort)
+- ⏳ GET /api/metrics/k-factor - Calculate K-factor from database events
+- ⏳ GET /api/metrics/funnel - Get invite → open → signup → FVM funnel
+- ⏳ GET /api/metrics/retention - Get D1/D7/D28 retention by cohort
+- ⏳ GET /api/metrics/cohort-comparison - Compare control vs treatment
+- ⏳ GET /api/agents/decisions - Query agent decision logs
 
 ### ⏳ Phase 4: Enhanced UI & Real-time (Deliverables #1, #5, #8)
 
-**Goal:** Complete thin-slice prototype with real-time features, metrics dashboard, and results-page share packs
+**Goal:** Build UI that reads from database - dashboard, results pages, presence layer
+
+**Rationale:** Database is now live, UI can query real data (simulation or eventually real users)
 
 - ⏳ **Metrics Dashboard (Deliverable #5)** - **UNIVERSAL for simulation & real users**
   - **Event-Driven Architecture**
@@ -389,18 +380,54 @@ Diagnostics, practice tests, flashcards produce results pages that:
     - Realistic presence patterns (peak hours)
     - Demo mode with accelerated activity
 
-### ⏳ Phase 5: Database & Production Hardening
+### ⏳ Phase 5: Session Intelligence & Agentic Actions (Deliverable #3)
 
-**Database Deployment:**
-- ⏳ PostgreSQL database provisioning (local or cloud)
-- ⏳ Environment configuration with production DATABASE_URL
-- ⏳ Run Prisma migrations (`prisma migrate deploy`)
-- ⏳ Seed database with initial data
-- ⏳ Database backup and recovery procedures
-- ⏳ Connection pooling setup (PgBouncer recommended)
+**Goal:** Implement transcription → summary → agentic actions → viral loops pipeline
+
+**Requires Phase 3 Database + Phase 4 UI:** Writes to database, renders in UI
+
+- ⏳ **Session Transcription Service**
+  - Mock transcription service for demo (simulated transcripts)
+  - WebSocket connection for real-time transcription updates
+  - Transcription storage in `Session.transcription` field
+  - Privacy-safe transcription (PII redaction for minors)
+
+- ⏳ **AI Summary Generation**
+  - Extract key moments, skill gaps, wins from transcripts
+  - Store structured summaries in `Session.summary` JSON field
+  - Identify triggers for agentic actions (stuck concepts, exam prep, milestones)
+  - Parent-safe summaries (FERPA compliant)
+
+- ⏳ **Agentic Action Implementations (≥4 required)**
+  - **Beat-My-Skill Challenge** (student → student)
+    - Generate 5-question micro-deck from skill gaps
+    - Create share link with deep link to challenge
+    - Award streak shields to both users on FVM completion
+  - **Study Buddy Nudge** (student → student)
+    - Detect exam prep or stuck concepts from summary
+    - Create co-practice invite tied to specific deck
+    - Show presence "friend joined" signal
+  - **Parent Progress Reel** (tutor → parent)
+    - Auto-compose 20-30s privacy-safe reel from key moments
+    - Include referral link with class pass reward
+    - Track reel views and conversions
+  - **Next-Session Prep Pack Share** (tutor → peers/parents)
+    - Generate AI prep pack from session summary
+    - Create class sampler link for tutor to share
+    - Credit tutor's referral XP on joins
+
+- ⏳ **Integration with Viral Loops**
+  - Connect agentic actions to Orchestrator agent
+  - Track agentic action → invite → join → FVM funnel
+  - Simulate agentic actions in simulation data
+  - Store all actions in `AgenticAction` table
+  - Render in UI components built in Phase 3
+
+### ⏳ Phase 6: Production Hardening & Security
+
+**Goal:** Production-ready features - auth, monitoring, rate limiting, security
 
 **Production Features:**
-- ⏳ Prisma client integration in all services
 - ⏳ JWT-based authentication & authorization
 - ⏳ Rate limiting & DDoS protection
 - ⏳ Logging & monitoring (structured logs)
@@ -408,8 +435,10 @@ Diagnostics, practice tests, flashcards produce results pages that:
 - ⏳ Performance monitoring & APM
 - ⏳ Testing & CI/CD enhancements
 - ⏳ API documentation (Swagger/OpenAPI)
+- ⏳ Security audit and penetration testing
+- ⏳ Load testing and performance optimization
 
-### ⏳ Phase 6: Final Deliverables & Demo (Deliverables #6, #7, #9)
+### ⏳ Phase 7: Final Deliverables & Demo (Deliverables #6, #7, #9)
 
 **Goal:** Complete all documentation, polish, and create demo
 
