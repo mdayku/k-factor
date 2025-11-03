@@ -6,9 +6,10 @@
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
-    "prisma:validate": "npx prisma validate",
-    "prisma:format": "npx prisma format",
-    "prisma:generate": "npx prisma generate",
+    "prisma:validate": "prisma validate",
+    "prisma:format": "prisma format",
+    "prisma:format:check": "prisma format --check",
+    "prisma:generate": "prisma generate",
     "ci": "pnpm install && pnpm prisma:generate && pnpm typecheck && pnpm build && pnpm test"
   },
   "devDependencies": {

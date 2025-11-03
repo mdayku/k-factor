@@ -45,15 +45,24 @@ cp env.example .env
 
 3. Update `DATABASE_URL` in `.env` with your PostgreSQL credentials
 
-4. Run Prisma migrations:
+4. **Format Prisma schema (if you made changes):**
+```bash
+pnpm prisma:format
+# or directly: npx prisma format
+```
+
+5. Run Prisma migrations:
 ```bash
 npx prisma migrate dev --name init
 ```
 
-5. Generate Prisma Client:
+6. Generate Prisma Client:
 ```bash
-npx prisma generate
+pnpm prisma:generate
+# or: npx prisma generate
 ```
+
+**Note:** Always run `pnpm prisma:format` before committing changes to `prisma/schema.prisma`. The CI will fail if the schema is not properly formatted.
 
 ### 4. Verify Setup
 
