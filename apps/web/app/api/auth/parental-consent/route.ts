@@ -110,16 +110,6 @@ export async function GET(request: NextRequest) {
 
     const consentRequest = await prisma.parentalConsent.findUnique({
       where: { consentToken: token },
-      include: {
-        childUser: {
-          select: {
-            name: true,
-            email: true,
-            age: true,
-            role: true,
-          },
-        },
-      },
     });
 
     if (!consentRequest) {
@@ -149,11 +139,29 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Fetch child user separately (ParentalConsent has no relation to User in schema)
+    const childUser = await prisma.user.findUnique({
+      where: { id: consentRequest.childUserId },
+      select: {
+        name: true,
+        email: true,
+        age: true,
+        role: true,
+      },
+    });
+
+    if (!childUser) {
+      return NextResponse.json(
+        { error: "Child user not found" },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json({
-      childName: consentRequest.childUser?.name,
-      childEmail: consentRequest.childUser?.email,
-      childAge: consentRequest.childUser?.age,
-      childRole: consentRequest.childUser?.role,
+      childName: childUser.name,
+      childEmail: childUser.email,
+      childAge: childUser.age,
+      childRole: childUser.role,
       parentEmail: consentRequest.parentEmail,
       createdAt: consentRequest.createdAt,
       expiresAt: consentRequest.expiresAt,
