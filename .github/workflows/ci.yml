@@ -208,14 +208,35 @@ jobs:
       - name: Start agents service in background
         run: |
           cd apps/agents
-          pnpm start &
+          echo "Starting agents service..."
+          nohup pnpm start > agents.log 2>&1 &
           echo $! > agents.pid
+          echo "Agent PID: $(cat agents.pid)"
+          sleep 2
+          echo "Checking if process is running..."
+          ps aux | grep node || true
+          echo "Server logs:"
+          cat agents.log || echo "No logs yet"
         env:
           PORT: 4000
+          NODE_ENV: test
 
       - name: Wait for service to be ready
         run: |
-          timeout 30 bash -c 'until curl -f http://localhost:4000/health; do sleep 1; done'
+          echo "Waiting for server to be ready..."
+          for i in {1..30}; do
+            if curl -f http://localhost:4000/health 2>/dev/null; then
+              echo "✅ Server is ready!"
+              exit 0
+            fi
+            echo "Attempt $i/30: Server not ready yet..."
+            cat apps/agents/agents.log 2>/dev/null || true
+            sleep 1
+          done
+          echo "❌ Server failed to start within 30 seconds"
+          echo "Final server logs:"
+          cat apps/agents/agents.log || echo "No logs available"
+          exit 1
 
       - name: Test health endpoint
         run: |
@@ -228,9 +249,12 @@ jobs:
       - name: Stop agents service
         if: always()
         run: |
+          echo "Stopping agents service..."
           if [ -f apps/agents/agents.pid ]; then
             kill $(cat apps/agents/agents.pid) || true
           fi
+          echo "Final server logs:"
+          cat apps/agents/agents.log || echo "No logs available"
 
   security-scan:
     name: Security Scan
