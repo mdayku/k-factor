@@ -699,7 +699,7 @@ Diagnostics, practice tests, flashcards produce results pages that:
 - ⏳ Account recovery options
 
 **Dependencies:**
-- Nodemailer 7.1.0 (already installed)
+- Nodemailer 7.0.10 (already installed)
 - Email service provider API keys
 - SMS service provider API keys
 - OAuth client credentials
