@@ -17,6 +17,9 @@ importers:
       prisma:
         specifier: ^6.18.0
         version: 6.18.0(typescript@5.9.3)
+      tsx:
+        specifier: ^4.19.1
+        version: 4.20.6
 
   apps/agents:
     dependencies:
@@ -70,6 +73,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@prisma/client':
+        specifier: ^6.18.0
+        version: 6.18.0(prisma@6.18.0(typescript@5.9.3))(typescript@5.9.3)
       next:
         specifier: 14.2.15
         version: 14.2.15(react-dom@18.3.1(react@18.3.1))(react@18.3.1)

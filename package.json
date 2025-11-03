@@ -10,12 +10,17 @@
     "prisma:format": "prisma format",
     "prisma:format:check": "prisma format --check",
     "prisma:generate": "prisma generate",
+    "prisma:seed": "prisma db seed",
     "ci": "pnpm install && pnpm prisma:generate && pnpm typecheck && pnpm build && pnpm test",
     "ci:check": "echo '🔍 Running local CI checks...' && pnpm prisma:validate && pnpm prisma:format:check && pnpm typecheck && pnpm build && pnpm test && echo '✅ All CI checks passed!'"
   },
   "devDependencies": {
     "concurrently": "^9.0.0",
     "prisma": "^6.18.0",
-    "@prisma/client": "^6.18.0"
+    "@prisma/client": "^6.18.0",
+    "tsx": "^4.19.1"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }

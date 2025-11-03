@@ -7,9 +7,10 @@ A comprehensive **10x K-Factor** growth system for Varsity Tutors with viral mec
 
 ## 🎯 Project Status
 
-**Phase 1 Complete**: Foundation, MCP Agents, Event Schema, Database Schema
-
-**Phase 2 Next**: Synthetic data simulation engine to demonstrate all success metrics
+**Phase 1 Complete**: Foundation, MCP Agents, Event Schema, Database Schema  
+**Phase 2 Complete**: Simulation engine with synthetic data generation  
+**Phase 3 Complete**: Database deployment (Supabase), seeding, 6 API endpoints  
+**Phase 4 Next**: Enhanced UI & metrics dashboard  
 
 See [PRD.md](./PRD.md) for complete requirements and roadmap.
 
@@ -99,6 +100,67 @@ Comprehensive Prisma schema with 13+ tables:
 
 See `prisma/schema.prisma`
 
+## 🎲 Simulation Tracking & Multiple Runs
+
+The database supports **multiple simulation runs** while keeping real user data completely safe!
+
+### Schema Fields
+
+**Added to User and Event models:**
+- `isSimulated` - Boolean flag (default: `false`)
+- `simulationId` - Unique identifier for each simulation run (e.g., `sim-1730665234567`)
+
+### How It Works
+
+1. **Each seed generates a unique ID:**
+   ```
+   🆔 Simulation ID: sim-1730665234567
+   ```
+
+2. **Only simulated data is deleted:**
+   ```typescript
+   // ✅ SAFE - Only deletes WHERE isSimulated = true
+   await prisma.user.deleteMany({ where: { isSimulated: true }});
+   ```
+
+3. **Real users are protected:**
+   - Real users have `isSimulated: false` (the default)
+   - Seed script never touches them
+
+### Query Examples
+
+```typescript
+// Get real users only
+await prisma.user.findMany({ 
+  where: { isSimulated: false } 
+});
+
+// Get all simulated users
+await prisma.user.findMany({ 
+  where: { isSimulated: true } 
+});
+
+// Get users from a specific simulation run
+await prisma.user.findMany({ 
+  where: { simulationId: 'sim-1730665234567' } 
+});
+
+// Compare two simulation runs
+const run1 = await prisma.event.count({ 
+  where: { simulationId: 'sim-1730665234567' } 
+});
+const run2 = await prisma.event.count({ 
+  where: { simulationId: 'sim-1730665789012' } 
+});
+```
+
+### Benefits
+
+✅ **Production-ready** - Real users are never deleted  
+✅ **Compare simulations** - Track how parameters affect K-factor  
+✅ **Easy cleanup** - Delete all simulations: `DELETE WHERE isSimulated = true`  
+✅ **Code reuse** - Same queries/dashboard work for both real and simulated data
+
 ## 📡 API Endpoints
 
 ### Agents Service (`:4000`)
@@ -126,16 +188,47 @@ See `prisma/schema.prisma`
 - `GET /r/:code` - Resolve and redirect smart link
 
 ### Web App (`:3000`)
+
+**Pages:**
 - `/` - Results page with share functionality
 - `/presence` - Live presence & leaderboards
 - `/deeplink` - FVM landing page
+
+**API Endpoints:**
+- `GET /api/events` - Query events with filters (type, user, cohort, date range, simulationId)
+- `GET /api/metrics/k-factor` - Calculate K-factor with cohort breakdown
+- `GET /api/metrics/funnel` - Get invite → open → signup → FVM funnel
+- `GET /api/metrics/retention` - Get D1/D7/D28 retention rates
+- `GET /api/metrics/cohort-comparison` - Compare control vs treatment with lifts
+- `GET /api/agents/decisions` - Query agent decision logs with rationales
+
+**Example API Calls:**
+```bash
+# Get K-factor for latest simulation
+curl "http://localhost:3000/api/metrics/k-factor?simulationId=sim-1762196864996"
+
+# Compare control vs treatment cohorts
+curl "http://localhost:3000/api/metrics/cohort-comparison"
+
+# Get funnel metrics for treatment group
+curl "http://localhost:3000/api/metrics/funnel?cohort=treatment"
+
+# Query recent invite events
+curl "http://localhost:3000/api/events?type=invite.sent&limit=10"
+
+# Get D7 retention rates
+curl "http://localhost:3000/api/metrics/retention?cohort=control"
+```
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js 18+
-- PostgreSQL 14+
+- PostgreSQL 14+ (or Supabase account)
 - pnpm (`npm install -g pnpm`)
+
+### Phase 3 Complete ✅
+Database is deployed, seeded with 1,100+ users and 18,000+ events, and all 6 API endpoints are working.
 
 ### Installation
 
@@ -162,7 +255,7 @@ pnpm --filter @app/web add dotenv
 
 3. **Setup database:**
 ```bash
-# Create PostgreSQL database
+# Create PostgreSQL database (or use Supabase - see env.example)
 createdb vt_kfactor
 
 # Copy environment file
@@ -173,7 +266,20 @@ npx prisma migrate dev --name init
 npx prisma generate
 ```
 
-4. **Run all services:**
+4. **Seed with simulation data:**
+```bash
+pnpm prisma:seed
+```
+
+This will:
+- Generate a unique `simulationId` (e.g., `sim-1730665234567`)
+- Create 1,000 simulated users (control + treatment cohorts)
+- Generate 14 days of realistic event data
+- Delete previous simulated data (real users are NEVER touched!)
+
+**Run it multiple times safely** - each run gets a new ID and old simulated data is removed.
+
+5. **Run all services:**
 ```bash
 pnpm dev
 ```

@@ -25,6 +25,10 @@ model User {
   coppaCompliant    Boolean   @default(false)
   optedOutGrowth    Boolean   @default(false)
   dataRetentionDate DateTime?
+  
+  // Simulation tracking
+  isSimulated  Boolean @default(false)
+  simulationId String?
 
   // Relations
   sentInvites     SignedLink[]  @relation("Referrer")
@@ -36,6 +40,7 @@ model User {
   @@index([email])
   @@index([role])
   @@index([isMinor])
+  @@index([isSimulated])
 }
 
 enum Role {
@@ -117,9 +122,14 @@ model Event {
   // Metadata
   metadata  Json?
   createdAt DateTime @default(now())
+  
+  // Simulation tracking
+  isSimulated  Boolean @default(false)
+  simulationId String?
 
   @@index([type])
   @@index([userId])
+  @@index([isSimulated])
   @@index([loop])
   @@index([sessionId])
   @@index([createdAt])
