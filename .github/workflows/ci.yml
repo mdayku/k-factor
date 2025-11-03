@@ -86,6 +86,7 @@ jobs:
         run: npx prisma validate
         env:
           DATABASE_URL: "postgresql://user:password@localhost:5432/ci_test?schema=public"
+          DIRECT_URL: "postgresql://user:password@localhost:5432/ci_test?schema=public"
 
       - name: Check Prisma format
         run: npx prisma format --check
@@ -129,6 +130,7 @@ jobs:
         run: npx prisma generate
         env:
           DATABASE_URL: "postgresql://user:password@localhost:5432/ci_test?schema=public"
+          DIRECT_URL: "postgresql://user:password@localhost:5432/ci_test?schema=public"
 
       - name: Build packages
         run: |
@@ -147,6 +149,10 @@ jobs:
         run: pnpm --filter @app/web run build
         env:
           SKIP_ENV_VALIDATION: true
+          DATABASE_URL: "postgresql://user:password@localhost:5432/ci_test?schema=public"
+          DIRECT_URL: "postgresql://user:password@localhost:5432/ci_test?schema=public"
+          NEXTAUTH_URL: "http://localhost:3000"
+          NEXTAUTH_SECRET: "ci-test-secret-key-not-for-production-use-only"
 
   test:
     name: Run Tests
@@ -199,6 +205,7 @@ jobs:
         run: npx prisma generate
         env:
           DATABASE_URL: "postgresql://user:password@localhost:5432/ci_test?schema=public"
+          DIRECT_URL: "postgresql://user:password@localhost:5432/ci_test?schema=public"
 
       - name: Build packages needed by agents
         run: |
