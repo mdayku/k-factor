@@ -192,6 +192,19 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Generate Prisma Client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: "postgresql://user:password@localhost:5432/ci_test?schema=public"
+
+      - name: Build packages needed by agents
+        run: |
+          pnpm --filter event-schema run build
+          pnpm --filter mcp-protocol run build
+
+      - name: Build agents service
+        run: pnpm --filter @app/agents run build
+
       - name: Start agents service in background
         run: |
           cd apps/agents

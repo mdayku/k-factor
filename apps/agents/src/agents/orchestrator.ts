@@ -20,7 +20,7 @@ const LOOP_ELIGIBILITY_RULES = {
 const userThrottle = new Map<string, { count: number; resetAt: number }>();
 
 export async function handleOrchestratorRequest(
-  request: OrchestratoreRequest
+  request: OrchestratorRequest
 ): Promise<OrchestratorResponse> {
   const startTime = Date.now();
   const { trigger, persona, userId, contextData } = request.context as any;
