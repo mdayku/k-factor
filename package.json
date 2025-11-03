@@ -1,0 +1,16 @@
+{
+  "name": "vt-kfactor",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n web,agents,attr \"pnpm --filter @app/web dev\" \"pnpm --filter @app/agents dev\" \"pnpm --filter @app/attribution dev\"",
+    "build": "pnpm -r build",
+    "test": "echo \"(tests TBD)\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}
