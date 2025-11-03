@@ -256,41 +256,201 @@ Diagnostics, practice tests, flashcards produce results pages that:
   - A/B test assignment and exposure logging
   - Statistical significance calculation
 
-- ⏳ **Metrics Dashboard**
+- ⏳ **Metrics Dashboard (Deliverable #5)**
   - Live K-factor readout with success flag (K ≥ 1.20)
   - Funnel visualizations (invite → open → join → FVM)
   - Cohort comparison charts (control vs treatment)
   - Agent decision logs and rationales
+  - Retention curves (D1/D7/D28) with cohort comparison
+  - Fraud detection events timeline
+  - CSAT and opt-out metrics
+  - Export functionality (CSV/JSON for analysis)
 
-### ⏳ Phase 3: Session Intelligence & Agentic Actions
+### ⏳ Phase 3: Session Intelligence & Agentic Actions (Deliverable #3)
 
-- ⏳ Session transcription service (mock for demo)
-- ⏳ AI summary generation from transcripts
-- ⏳ 4 agentic action implementations:
-  - Beat-My-Skill Challenge (student)
-  - Study Buddy Nudge (student)
-  - Parent Progress Reel (tutor)
-  - Next-Session Prep Pack Share (tutor)
-- ⏳ Agentic actions integrated with simulation
+**Goal:** Implement transcription → summary → agentic actions → viral loops pipeline
 
-### ⏳ Phase 4: Enhanced UI & Real-time
+- ⏳ **Session Transcription Service**
+  - Mock transcription service for demo (simulated transcripts)
+  - WebSocket connection for real-time transcription updates
+  - Transcription storage in `Session.transcription` field
+  - Privacy-safe transcription (PII redaction for minors)
 
-- ⏳ Share card generation for diagnostics/practice/flashcards
-- ⏳ Deep link generation to FVM
-- ⏳ Real-time presence with WebSockets
-- ⏳ Interactive leaderboards with simulated data
-- ⏳ Cohort rooms
-- ⏳ Results page redesign with share functionality
+- ⏳ **AI Summary Generation**
+  - Extract key moments, skill gaps, wins from transcripts
+  - Store structured summaries in `Session.summary` JSON field
+  - Identify triggers for agentic actions (stuck concepts, exam prep, milestones)
+  - Parent-safe summaries (FERPA compliant)
 
-### ⏳ Phase 5: Production Hardening & Demo
+- ⏳ **Agentic Action Implementations (≥4 required)**
+  - **Beat-My-Skill Challenge** (student → student)
+    - Generate 5-question micro-deck from skill gaps
+    - Create share link with deep link to challenge
+    - Award streak shields to both users on FVM completion
+  - **Study Buddy Nudge** (student → student)
+    - Detect exam prep or stuck concepts from summary
+    - Create co-practice invite tied to specific deck
+    - Show presence "friend joined" signal
+  - **Parent Progress Reel** (tutor → parent)
+    - Auto-compose 20-30s privacy-safe reel from key moments
+    - Include referral link with class pass reward
+    - Track reel views and conversions
+  - **Next-Session Prep Pack Share** (tutor → peers/parents)
+    - Generate AI prep pack from session summary
+    - Create class sampler link for tutor to share
+    - Credit tutor's referral XP on joins
 
-- ⏳ PostgreSQL setup and migration
-- ⏳ Prisma client integration
-- ⏳ JWT-based authentication
-- ⏳ Logging & monitoring
-- ⏳ Testing & CI/CD
-- ⏳ Compliance memo (1-pager)
-- ⏳ 3-minute demo video: trigger → invite → join → FVM
+- ⏳ **Integration with Viral Loops**
+  - Connect agentic actions to Orchestrator agent
+  - Track agentic action → invite → join → FVM funnel
+  - Simulate agentic actions in Phase 2 simulation data
+  - Store all actions in `AgenticAction` table
+
+### ⏳ Phase 4: Enhanced UI & Real-time (Deliverables #1, #8)
+
+**Goal:** Complete thin-slice prototype with real-time features and results-page share packs
+
+- ⏳ **Results-Page Share Packs (Deliverable #8)**
+  - **Share Card Generation**
+    - Privacy-safe cards for diagnostics, practice tests, flashcards
+    - Three variants: student, parent, tutor
+    - Include score, skills heatmap (redacted if needed)
+    - Social media friendly dimensions (1200x630 for OG)
+  - **Challenge CTAs**
+    - "Challenge a friend" button with personalized copy
+    - "Invite study buddy" for co-practice
+    - "Share progress" for parents
+  - **Deep Links to FVM**
+    - 5-question skill check landing page
+    - Pre-filled context from share origin
+    - Track deep link → FVM completion
+  - **Cohort/Classroom Variants**
+    - Bulk invite for teachers
+    - Group challenge creation
+    - Classroom leaderboard integration
+  - **Results Page Redesign**
+    - Integrate share functionality into existing results pages
+    - Show "X friends challenged" social proof
+    - Results-page impressions → share clicks tracking
+
+- ⏳ **Real-Time Presence Layer (Deliverable #1 completion)**
+  - **WebSocket Infrastructure**
+    - WebSocket server for presence updates
+    - Connection pooling and scaling considerations
+    - Heartbeat/keepalive mechanism
+  - **Presence Signals**
+    - "28 peers practicing Algebra now" live count
+    - "Friends online now" indicators
+    - Subject-specific activity streams
+  - **Interactive Leaderboards**
+    - Real-time rank updates with simulated data
+    - Per-subject leaderboards
+    - Friend leaderboards (filtered view)
+    - Animations for rank changes
+  - **Cohort Rooms**
+    - Live cohort activity feed
+    - Co-practice session initiation
+    - Shared practice goals and progress
+  - **Integration with Simulation**
+    - Feed simulated presence data to WebSocket
+    - Realistic presence patterns (peak hours)
+    - Demo mode with accelerated activity
+
+### ⏳ Phase 5: Database & Production Hardening
+
+**Database Deployment:**
+- ⏳ PostgreSQL database provisioning (local or cloud)
+- ⏳ Environment configuration with production DATABASE_URL
+- ⏳ Run Prisma migrations (`prisma migrate deploy`)
+- ⏳ Seed database with initial data
+- ⏳ Database backup and recovery procedures
+- ⏳ Connection pooling setup (PgBouncer recommended)
+
+**Production Features:**
+- ⏳ Prisma client integration in all services
+- ⏳ JWT-based authentication & authorization
+- ⏳ Rate limiting & DDoS protection
+- ⏳ Logging & monitoring (structured logs)
+- ⏳ Error tracking (Sentry or similar)
+- ⏳ Performance monitoring & APM
+- ⏳ Testing & CI/CD enhancements
+- ⏳ API documentation (Swagger/OpenAPI)
+
+### ⏳ Phase 6: Final Deliverables & Demo (Deliverables #6, #7, #9)
+
+**Goal:** Complete all documentation, polish, and create demo
+
+- ⏳ **Copy Kit Extraction (Deliverable #6)**
+  - Extract copy templates from personalization agent to separate service
+  - Organize templates by loop, persona, tone
+  - **Templates needed:**
+    - Buddy Challenge (student: friendly, motivational)
+    - Streak Rescue (student: friendly, playful)
+    - Proud Parent (parent: professional, friendly)
+    - Tutor Spotlight (tutor: professional)
+    - Results Rally, Class Watch-Party, Subject Clubs, Achievement Spotlight
+  - Localization structure (English + extensible for i18n)
+  - Version control for copy A/B testing
+  - API endpoint for copy retrieval
+  - Documentation of available placeholders and personalization variables
+
+- ⏳ **Risk & Compliance Memo (Deliverable #7 - 1 pager)**
+  - **Data Flows Section:**
+    - Event pipeline architecture diagram
+    - PII handling and minimization strategy
+    - Data retention policies (child data segregation)
+    - Cross-service data flow (web → agents → attribution)
+  - **Consent Mechanisms:**
+    - COPPA gating flow for minors (< 13)
+    - Parental consent workflow
+    - FERPA compliance for education records
+    - Opt-in/opt-out mechanisms
+  - **Privacy Guardrails:**
+    - Age verification at registration
+    - Parental email validation
+    - Privacy-safe transcription (PII redaction)
+    - Share card privacy controls
+  - **Fraud Prevention:**
+    - Device/IP/email duplicate detection
+    - Rate limiting (20/day, 5/hour)
+    - Suspicious pattern detection
+    - Manual review triggers
+  - **Opt-Out Procedures:**
+    - Growth communications opt-out
+    - Data deletion requests (GDPR/CCPA ready)
+    - Complaint handling workflow
+
+- ⏳ **3-Minute Demo Video (Deliverable #9)**
+  - **Script & Storyboard:**
+    - 0:00-0:30 - Problem statement & K-factor goal
+    - 0:30-1:00 - Trigger → Invite flow with agent decisions
+    - 1:00-1:30 - Join → FVM journey with deep links
+    - 1:30-2:15 - Live metrics dashboard (K ≥ 1.20, cohort comparison)
+    - 2:15-2:45 - Fraud detection & COPPA enforcement demos
+    - 2:45-3:00 - Results summary & next steps
+  - **Demo Environment Setup:**
+    - Seeded simulation data (14-day cohort)
+    - Pre-configured user journeys for smooth flow
+    - Dashboard with live metrics updating
+    - Multiple browser windows for sender/receiver views
+  - **Recording & Editing:**
+    - Screen recording with voiceover
+    - Callout annotations for key features
+    - Background music (optional)
+    - Subtitles/captions
+  - **Demo Deliverables:**
+    - Video file (MP4, 1080p)
+    - Demo script document
+    - Screenshots of key moments
+
+- ⏳ **Final Polish**
+  - Code cleanup and linting
+  - Remove console.logs and debug code
+  - Update all documentation with final state
+  - Verify all acceptance criteria met
+  - Performance optimization
+  - Security audit of exposed endpoints
+  - Final CI/CD run validation
 
 ---
 
@@ -441,3 +601,103 @@ With Phase 1 complete, you can:
 5. Metrics dashboard (live K-factor, funnels, cohort charts)
 
 **Success criteria:** Simulation produces K ≥ 1.20 in treatment cohort with statistical significance, demonstrating all required metrics without real users.
+
+---
+
+## 📋 Bootcamp Deliverables Checklist
+
+**Required deliverables from bootcamp brief:**
+
+### 1. ✅ Thin-Slice Prototype (Web/Mobile)
+- ✅ **Status:** Phase 1 Complete  
+- **Details:** Next.js web app with results pages, presence UI, deep links
+- **Working loops:** Buddy Challenge, Streak Rescue, Proud Parent, Tutor Spotlight (+ 4 more defined)
+- **Live presence:** Stub UI ready, needs WebSockets + simulation data (Phase 4)
+
+### 2. ✅ MCP Agent Code for All 7 Agents
+- ✅ **Status:** Phase 1 Complete
+- **Agents:** Orchestrator, Personalization, Incentives, Social Presence, Tutor Advocacy, Trust & Safety, Experimentation
+- **Details:** Full implementations in `apps/agents/src/agents/`, all with MCP protocol, rationales, and auditability
+- **Endpoints:** 7 dedicated `/mcp/*` endpoints + health/metrics
+
+### 3. ⏳ Session Transcription + Summary Hooks → Agentic Actions
+- ⏳ **Status:** Phase 3 (Schema ready)
+- **Requirements:** ≥4 agentic actions (≥2 tutor, ≥2 student) feeding viral loops
+- **Defined actions:**
+  - Beat-My-Skill Challenge (student → student)
+  - Study Buddy Nudge (student → student)
+  - Parent Progress Reel (tutor → parent)
+  - Next-Session Prep Pack Share (tutor → peers/parents)
+- **Database:** `Session` and `AgenticAction` tables ready
+
+### 4. ✅ Signed Smart Links + Attribution Service
+- ✅ **Status:** Working from MVP
+- **Details:** HMAC-signed short codes with UTM parameters
+- **Service:** `apps/attribution/src/server.ts`
+- **Database:** `SignedLink` and `Attribution` tables
+- **Features:** Last-touch attribution, multi-touch tracking, cross-device continuity
+
+### 5. ⏳ Event Spec & Dashboards
+- 🟢 **Event Spec:** Complete (25+ event types in `packages/event-schema/`)
+- 🟡 **K-factor tracking:** Implemented, needs simulation data
+- ⏳ **Dashboards:** Phase 2 (need visualization + live readouts)
+- **Metrics:** K, invites/user, conversion, FVM, retention (D1/D7/D28), guardrails
+
+### 6. 🟡 Copy Kit: Dynamic Templates by Persona
+- 🟡 **Status:** Partially implemented
+- **Location:** `apps/agents/src/agents/personalization.ts`
+- **Templates:** Buddy Challenge, Streak Rescue, Proud Parent, Tutor Spotlight
+- **Tones:** Friendly, motivational, professional, playful
+- **Personas:** Student, parent, tutor
+- **Localization:** English only (extensible for i18n)
+- **TODO:** Extract to separate copy kit file/service
+
+### 7. ⏳ Risk & Compliance Memo (1-Pager)
+- ⏳ **Status:** Phase 6
+- **Content required:**
+  - Data flows (event pipeline, PII handling)
+  - Consent mechanisms (COPPA/FERPA gating)
+  - Privacy guardrails (age checks, parental consent)
+  - Fraud prevention measures
+  - Opt-out procedures
+- **Schema support:** `User.coppaCompliant`, `User.parentalConsent`, `FraudFlag`, `Complaint` tables
+
+### 8. ⏳ Results-Page Share Packs
+- ⏳ **Status:** Phase 4
+- **Tools:** Diagnostics, practice tests, flashcards, async tools
+- **Components needed:**
+  - Privacy-safe share cards (student/parent/tutor variants)
+  - "Challenge a friend / Invite study buddy" CTAs
+  - Deep links to bite-size FVM (5-question skill check)
+  - Cohort/classroom group invite variants
+- **Database:** `ResultsPage` table ready
+- **Backend:** Personalization agent ready for copy generation
+
+### 9. ⏳ Run-of-Show Demo (3-Minute Journey)
+- ⏳ **Status:** Phase 6
+- **Flow:** Trigger → Invite → Join → FVM
+- **Requirements:**
+  - Live simulation running
+  - All metrics visible on dashboard
+  - Real-time K-factor readout (K ≥ 1.20)
+  - Fraud detection demonstration
+  - COPPA compliance enforcement
+  - Cohort comparison (control vs treatment)
+
+---
+
+## 🎯 Deliverables Summary
+
+| Deliverable | Status | Phase | Notes |
+|-------------|--------|-------|-------|
+| 1. Thin-slice prototype | ✅ Complete | Phase 1 | Web app functional, needs real-time layer |
+| 2. MCP agents (7 total) | ✅ Complete | Phase 1 | All implemented with rationales |
+| 3. Session transcription → agentic actions | ⏳ Pending | Phase 3 | Schema ready, need implementation |
+| 4. Signed smart links + attribution | ✅ Complete | MVP | Working end-to-end |
+| 5. Event spec & dashboards | 🟡 Partial | Phases 1-2 | Events done, dashboards in Phase 2 |
+| 6. Copy kit | 🟡 Partial | Phase 1 | Core templates done, need extraction |
+| 7. Compliance memo | ⏳ Pending | Phase 6 | Schema supports all requirements |
+| 8. Results-page share packs | ⏳ Pending | Phase 4 | Backend ready, UI needed |
+| 9. 3-minute demo | ⏳ Pending | Phase 6 | Requires all above + simulation |
+
+**Overall Progress:** 2/9 complete ✅ | 2/9 partial 🟡 | 5/9 pending ⏳
