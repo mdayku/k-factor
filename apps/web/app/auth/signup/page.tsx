@@ -78,7 +78,7 @@ export default function SignUpPage() {
         setLoading(false);
       } else {
         // Redirect to sign in
-        router.push("/auth/signin?registered=true");
+        router.push("/auth/signin?registered=true" as any);
       }
     } catch (error) {
       setErrors({ general: "An error occurred. Please try again." });

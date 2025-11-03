@@ -40,7 +40,7 @@ function SignInForm() {
         setError(result.error);
         setLoading(false);
       } else {
-        router.push(callbackUrl);
+        router.push(callbackUrl as any);
       }
     } catch (err) {
       setError("An error occurred. Please try again.");
