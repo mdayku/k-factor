@@ -73,6 +73,23 @@ export class UserGenerator {
   private coppaMinorCount = 0;
 
   /**
+   * Box-Muller transform for normal distribution sampling
+   */
+  private normalRandom(mean: number = 0, stdDev: number = 1): number {
+    const u1 = Math.random();
+    const u2 = Math.random();
+    const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+    return z0 * stdDev + mean;
+  }
+
+  /**
+   * Clamp value between min and max
+   */
+  private clamp(value: number, min: number, max: number): number {
+    return Math.min(Math.max(value, min), max);
+  }
+
+  /**
    * Generate a batch of synthetic users
    */
   generate(count: number, options: {
@@ -151,10 +168,16 @@ export class UserGenerator {
       : `device-${userId}`;
     const ipAddress = `192.168.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`;
 
-    // Behavioral attributes
+    // Behavioral attributes with normal distributions for realistic variance
     const engagementLevel = Math.random() < 0.2 ? "low" : Math.random() < 0.6 ? "medium" : "high";
-    const conversionProbability = Math.random() * 0.4 + (engagementLevel === "high" ? 0.4 : engagementLevel === "medium" ? 0.2 : 0.1);
-    const shareability = Math.random() * 0.5 + (engagementLevel === "high" ? 0.4 : 0.2);
+    
+    // Conversion probability: Normal distribution with mean based on engagement
+    const conversionMean = engagementLevel === "high" ? 0.65 : engagementLevel === "medium" ? 0.45 : 0.25;
+    const conversionProbability = this.clamp(this.normalRandom(conversionMean, 0.15), 0.05, 0.95);
+    
+    // Shareability: Normal distribution (mean ~0.5, SD=0.2)
+    const shareabilityMean = engagementLevel === "high" ? 0.70 : engagementLevel === "medium" ? 0.50 : 0.30;
+    const shareability = this.clamp(this.normalRandom(shareabilityMean, 0.18), 0.05, 0.95);
 
     // Subject (for students and tutors)
     const subject = persona !== "parent" 

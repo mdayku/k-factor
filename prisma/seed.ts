@@ -26,14 +26,16 @@ async function main() {
   console.log(`✅ Cleared ${deletedUsers.count} simulated users and ${deletedEvents.count} simulated events\n`);
 
   // Run simulation (in-memory only)
-  console.log('🧪 Generating simulation data (in-memory - not touching DB yet)...');
-  console.log('   Creating 500 control + 500 treatment users with 14 days of activity\n');
+  console.log('🧪 Generating simulation data (Monte Carlo simulation - single run)...');
+  console.log('   Creating 500 control + 500 treatment users with 14 days of activity');
+  console.log('   Users have normally-distributed behavioral propensities for realistic variance\n');
   const simulator = new CohortSimulator();
   const experiment = simulator.runExperiment(500, 500, 14);
   
-  console.log(`✅ Simulation data generated!`);
+  console.log(`✅ Simulation data generated! (Single Monte Carlo run)`);
   console.log(`   Control K-factor: ${experiment.control.kFactor.toFixed(3)}`);
   console.log(`   Treatment K-factor: ${experiment.treatment.kFactor.toFixed(3)}`);
+  console.log(`   📝 Note: In production, run 30-100 iterations and report mean ± SD with 95% CI`);
 
   // Get all events from simulation
   const simulationEvents = simulator.getEvents();

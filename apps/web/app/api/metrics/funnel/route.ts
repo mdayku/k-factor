@@ -14,39 +14,113 @@ export async function GET(request: NextRequest) {
     const baseWhere: any = {};
     if (simulationId) baseWhere.simulationId = simulationId;
     if (isSimulated !== null) baseWhere.isSimulated = isSimulated === 'true';
-    if (cohort) {
-      baseWhere.metadata = {
-        path: ['cohort'],
-        equals: cohort
-      };
-    }
+    
+    // Helper to add cohort filter
+    const addCohortFilter = (where: any) => {
+      if (cohort) {
+        return {
+          ...where,
+          metadata: {
+            path: ['cohort'],
+            equals: cohort
+          }
+        };
+      }
+      return where;
+    };
 
-    // Get funnel stages: invite.sent → invite.opened → account.created → fvm.reached
+    // Get funnel stages: invite.sent → invite.opened → account.created (referred only) → fvm.reached (referred only)
     const [
       invitesSent,
       invitesOpened,
       accountsCreated,
+      referredUserIds,
       fvmReached
     ] = await Promise.all([
+      // Step 1: Invites sent
       prisma.event.count({
-        where: { ...baseWhere, type: 'invite.sent' }
+        where: addCohortFilter({ ...baseWhere, type: 'invite.sent' })
       }),
+      // Step 2: Invites opened
       prisma.event.count({
-        where: { ...baseWhere, type: 'invite.opened' }
+        where: addCohortFilter({ ...baseWhere, type: 'invite.opened' })
       }),
+      // Step 3: Referred signups (account.created WITH referrerSignedLinkId)
       prisma.event.count({
-        where: { ...baseWhere, type: 'account.created' }
+        where: cohort ? {
+          ...baseWhere,
+          type: 'account.created',
+          AND: [
+            {
+              metadata: {
+                path: ['referrerSignedLinkId'],
+                not: null
+              }
+            },
+            {
+              metadata: {
+                path: ['cohort'],
+                equals: cohort
+              }
+            }
+          ]
+        } : {
+          ...baseWhere,
+          type: 'account.created',
+          metadata: {
+            path: ['referrerSignedLinkId'],
+            not: null
+          }
+        }
       }),
-      prisma.event.count({
-        where: { ...baseWhere, type: 'fvm.reached' }
-      })
+      // Get referred user IDs for step 4
+      prisma.event.findMany({
+        where: cohort ? {
+          ...baseWhere,
+          type: 'account.created',
+          AND: [
+            {
+              metadata: {
+                path: ['referrerSignedLinkId'],
+                not: null
+              }
+            },
+            {
+              metadata: {
+                path: ['cohort'],
+                equals: cohort
+              }
+            }
+          ]
+        } : {
+          ...baseWhere,
+          type: 'account.created',
+          metadata: {
+            path: ['referrerSignedLinkId'],
+            not: null
+          }
+        },
+        select: { userId: true }
+      }),
+      // Placeholder, will calculate below
+      Promise.resolve(0)
     ]);
+
+    // Step 4: FVM reached (only for referred users)
+    const referredIds = referredUserIds.map(e => e.userId).filter(Boolean);
+    const fvmReachedCount = referredIds.length > 0 ? await prisma.event.count({
+      where: addCohortFilter({
+        ...baseWhere,
+        type: 'fvm.reached',
+        userId: { in: referredIds }
+      })
+    }) : 0;
 
     // Calculate conversion rates
     const openRate = invitesSent > 0 ? (invitesOpened / invitesSent) * 100 : 0;
     const signupRate = invitesOpened > 0 ? (accountsCreated / invitesOpened) * 100 : 0;
-    const fvmRate = accountsCreated > 0 ? (fvmReached / accountsCreated) * 100 : 0;
-    const overallConversion = invitesSent > 0 ? (fvmReached / invitesSent) * 100 : 0;
+    const fvmRate = accountsCreated > 0 ? (fvmReachedCount / accountsCreated) * 100 : 0;
+    const overallConversion = invitesSent > 0 ? (fvmReachedCount / invitesSent) * 100 : 0;
 
     return NextResponse.json({
       funnel: [
@@ -70,19 +144,19 @@ export async function GET(request: NextRequest) {
         },
         {
           stage: 'fvm.reached',
-          count: fvmReached,
-          percentage: invitesSent > 0 ? (fvmReached / invitesSent) * 100 : 0,
+          count: fvmReachedCount,
+          percentage: invitesSent > 0 ? (fvmReachedCount / invitesSent) * 100 : 0,
           conversionFromPrevious: fvmRate
         }
       ],
       summary: {
         totalInvitesSent: invitesSent,
-        totalFvmReached: fvmReached,
+        totalFvmReached: fvmReachedCount,
         overallConversion: overallConversion,
         dropoffs: {
           sentToOpened: invitesSent - invitesOpened,
           openedToSignup: invitesOpened - accountsCreated,
-          signupToFvm: accountsCreated - fvmReached
+          signupToFvm: accountsCreated - fvmReachedCount
         }
       },
       cohort: cohort || 'all'

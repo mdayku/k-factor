@@ -184,8 +184,25 @@ export class CohortSimulator {
 
       // For each invite sent, simulate opens and conversions
       for (let inviteNum = 0; inviteNum < journey.invitesSent; inviteNum++) {
+        const signedLinkId = `link_${inviter.userId}_${Date.now()}_${inviteNum}`;
+        
         // Invite opened?
         if (Math.random() < config.behaviorConfig.inviteOpenRate) {
+          // Generate invite.opened event
+          const openTime = new Date(config.startDate.getTime() + Math.random() * config.durationDays * 24 * 60 * 60 * 1000);
+          this.eventGenerator.addRawEvent({
+            type: 'invite.opened',
+            ts: openTime.toISOString(),
+            userId: null, // Not yet a user
+            sessionId: `new_${Date.now()}_${inviteNum}`,
+            surface: 'web',
+            metadata: {
+              signedLinkId,
+              referrerId: inviter.userId,
+              cohort: config.name
+            }
+          });
+          
           // Invite converted to signup?
           if (Math.random() < config.behaviorConfig.inviteToSignupRate) {
             // Create a referred user (similar persona/demographics to inviter)
@@ -195,9 +212,13 @@ export class CohortSimulator {
             // Track the conversion
             journey.invitesAccepted++;
 
-            // Simulate the referred user's journey (shorter for simplicity)
+            // Simulate the referred user's journey with referral metadata
             const referredBehavior = new BehaviorEngine(config.behaviorConfig, config.startDate);
-            const referredJourney = referredBehavior.simulateJourney(referredUser, config.durationDays);
+            const referredJourney = referredBehavior.simulateJourney(referredUser, config.durationDays, {
+              isReferred: true,
+              referrerSignedLinkId: signedLinkId,
+              referrerId: inviter.userId
+            });
             
             // Generate events for referred user
             this.eventGenerator.generateEvents(referredUser, referredJourney);

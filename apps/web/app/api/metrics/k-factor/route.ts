@@ -31,17 +31,26 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Get invite.accepted events
+    // Get account.created events (conversions from invites)
+    // These are new users who signed up after opening an invite
     const invitesAccepted = await prisma.event.count({
       where: {
         ...baseWhere,
-        type: 'invite.accepted',
-        ...(cohort && {
-          metadata: {
-            path: ['cohort'],
-            equals: cohort
-          }
-        })
+        type: 'account.created',
+        AND: [
+          {
+            metadata: {
+              path: ['referrerSignedLinkId'],
+              not: null
+            }
+          },
+          ...(cohort ? [{
+            metadata: {
+              path: ['cohort'],
+              equals: cohort
+            }
+          }] : [])
+        ]
       }
     });
 
@@ -75,11 +84,21 @@ export async function GET(request: NextRequest) {
       const controlInvitesAccepted = await prisma.event.count({
         where: {
           ...baseWhere,
-          type: 'invite.accepted',
-          metadata: {
-            path: ['cohort'],
-            equals: 'control'
-          }
+          type: 'account.created',
+          AND: [
+            {
+              metadata: {
+                path: ['referrerSignedLinkId'],
+                not: null
+              }
+            },
+            {
+              metadata: {
+                path: ['cohort'],
+                equals: 'control'
+              }
+            }
+          ]
         }
       });
 
@@ -97,11 +116,21 @@ export async function GET(request: NextRequest) {
       const treatmentInvitesAccepted = await prisma.event.count({
         where: {
           ...baseWhere,
-          type: 'invite.accepted',
-          metadata: {
-            path: ['cohort'],
-            equals: 'treatment'
-          }
+          type: 'account.created',
+          AND: [
+            {
+              metadata: {
+                path: ['referrerSignedLinkId'],
+                not: null
+              }
+            },
+            {
+              metadata: {
+                path: ['cohort'],
+                equals: 'treatment'
+              }
+            }
+          ]
         }
       });
 

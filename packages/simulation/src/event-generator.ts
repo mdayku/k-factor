@@ -67,10 +67,12 @@ export class EventGenerator {
           surface,
           metadata: {
             persona: user.persona,
-            referrerSignedLinkId: action.metadata?.referral ? "referral_link" : null,
+            referrerSignedLinkId: action.metadata?.referrerSignedLinkId || null,
+            referrerId: action.metadata?.referrerId || null,
             age: user.age,
             parentalConsentGiven: user.parentalConsentGiven,
-            coppaMinor: user.coppaMinor
+            coppaMinor: user.coppaMinor,
+            cohort: user.cohortId || "unknown"
           }
         });
         break;
@@ -157,7 +159,8 @@ export class EventGenerator {
           metadata: {
             loop: action.metadata?.loop,
             channel: action.metadata?.channel,
-            signedLinkId: `link_${user.userId}_${Date.now()}`
+            signedLinkId: `link_${user.userId}_${Date.now()}`,
+            cohort: user.cohortId || "unknown"
           }
         });
         break;
@@ -318,6 +321,13 @@ export class EventGenerator {
       uniqueUsers: userSet.size,
       uniqueSessions: sessionSet.size
     };
+  }
+
+  /**
+   * Add a raw event directly (for viral spread events like invite.opened)
+   */
+  addRawEvent(event: SimulationEvent): void {
+    this.eventLog.push(event);
   }
 
   /**

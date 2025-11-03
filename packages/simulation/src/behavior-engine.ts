@@ -100,7 +100,11 @@ export class BehaviorEngine {
   /**
    * Simulate a complete user journey over N days
    */
-  simulateJourney(user: SyntheticUser, days: number = 14): UserJourney {
+  simulateJourney(
+    user: SyntheticUser, 
+    days: number = 14,
+    referralData?: { isReferred: boolean; referrerSignedLinkId: string; referrerId: string }
+  ): UserJourney {
     const journey: UserJourney = {
       userId: user.userId,
       actions: [],
@@ -115,7 +119,9 @@ export class BehaviorEngine {
     // Start with signup
     this.addAction(journey, "signup", new Date(this.currentTime), {
       persona: user.persona,
-      referral: false
+      referral: referralData?.isReferred || false,
+      referrerSignedLinkId: referralData?.referrerSignedLinkId || null,
+      referrerId: referralData?.referrerId || null
     });
 
     // First session (within 1 hour of signup)

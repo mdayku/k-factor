@@ -75,7 +75,11 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching events:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch events' },
+      { 
+        error: 'Failed to fetch events',
+        details: error instanceof Error ? error.message : 'Unknown error',
+        hasDbUrl: !!process.env.DATABASE_URL
+      },
       { status: 500 }
     );
   }

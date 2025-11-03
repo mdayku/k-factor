@@ -1,10 +1,11 @@
 # PRD — 10x K-Factor (Production Roadmap)
 
-## 🎯 Current Status: **Phase 3 Complete! 🎉**
+## 🎯 Current Status: **Phase 3 Complete! Phase 4 In Progress 🚀**
 
-**All 7 MCP agents** | **Simulation engine live** | **Database deployed (Supabase)** | **1,100+ users seeded** | **18,000+ events** | **6 API endpoints**
+**All 7 MCP agents** | **Simulation engine live** | **Database deployed (Supabase)** | **1,100+ users seeded** | **18,000+ events** | **6 API endpoints** | **✅ Metrics Dashboard Live**
 
-**Next:** Phase 4: Enhanced UI & Real-time - build metrics dashboard, results pages, presence layer
+**Phase 4 Progress:** Dashboard with K-factor, funnel, retention, cohort comparison, agent logs, fraud monitoring  
+**Next Critical:** Phase 3.5 (Authentication & User Management) - then continue Phase 4 (share cards, presence)
 
 ---
 
@@ -297,11 +298,57 @@ Diagnostics, practice tests, flashcards produce results pages that:
 - ✅ GET /api/metrics/cohort-comparison - Compare control vs treatment
 - ✅ GET /api/agents/decisions - Query agent decision logs
 
-### ⏳ Phase 4: Enhanced UI & Real-time (Deliverables #1, #5, #8) - NEXT
+### ⏳ Phase 3.5: Authentication & User Management - NEXT
+
+**Goal:** Implement user authentication, registration, and account management
+
+**Rationale:** Required before UI can have user-specific features, COPPA compliance needs verified accounts
+
+**Authentication System:**
+- ⏳ NextAuth.js integration for Next.js
+- ⏳ Email/password authentication
+- ⏳ OAuth providers (Google, Apple for "Sign in with...")
+- ⏳ Session management with secure cookies
+- ⏳ Password reset flow via email
+- ⏳ Protected routes and middleware
+
+**Registration Flow:**
+- ⏳ Sign-up form with email verification
+- ⏳ Age verification (COPPA compliance)
+- ⏳ Parental consent workflow for users < 13
+  - Collect parent email
+  - Send verification email to parent
+  - Parent must approve before child account activates
+- ⏳ Role selection (student/parent/tutor)
+- ⏳ Profile setup (name, grade level, subjects)
+
+**User Profile & Settings:**
+- ⏳ Profile management page
+- ⏳ Account settings (email, password change)
+- ⏳ Notification preferences (email, push, SMS)
+- ⏳ Privacy settings
+- ⏳ Opt-out UI for growth communications
+- ⏳ Account deletion (GDPR right to be forgotten)
+
+**Legal & Compliance Pages:**
+- ⏳ Terms of Service page
+- ⏳ Privacy Policy page
+- ⏳ Cookie consent banner
+- ⏳ COPPA consent forms for parents
+- ⏳ FERPA compliance documentation
+
+**Onboarding Flow:**
+- ⏳ First-time user welcome wizard
+- ⏳ Product tour / tutorial
+- ⏳ Initial preferences setup
+- ⏳ Sample FVM experience (try before committing)
+- ⏳ Friend import/invite from onboarding
+
+### ⏳ Phase 4: Enhanced UI & Real-time (Deliverables #1, #5, #8)
 
 **Goal:** Build UI that reads from database - dashboard, results pages, presence layer
 
-**Rationale:** Database is now live, UI can query real data (simulation or eventually real users)
+**Rationale:** Database is now live, users are authenticated, UI can show personalized data
 
 - ⏳ **Metrics Dashboard (Deliverable #5)** - **UNIVERSAL for simulation & real users**
   - **Event-Driven Architecture**
@@ -336,19 +383,35 @@ Diagnostics, practice tests, flashcards produce results pages that:
     - Export functionality (CSV/JSON)
 
 - ⏳ **Results-Page Share Packs (Deliverable #8)**
+  - **Image Generation & Storage** ⭐ NEW
+    - Dynamic image generation for share cards (Canvas API or Puppeteer)
+    - Cloud storage for generated images (S3, Cloudinary, or similar)
+    - CDN for fast image delivery
+    - Image optimization (compression, format conversion)
+    - Template system for different card types
+  - **Email & SMS Infrastructure** ⭐ NEW
+    - Email service provider integration (SendGrid, Postmark, AWS SES)
+    - SMS provider integration (Twilio, etc.)
+    - Email templates for all invite types
+    - SMS templates for urgent invites (Streak Rescue)
+    - Delivery tracking and bounce handling
+    - Unsubscribe management
   - **Share Card Generation**
     - Privacy-safe cards for diagnostics, practice tests, flashcards
     - Three variants: student, parent, tutor
     - Include score, skills heatmap (redacted if needed)
     - Social media friendly dimensions (1200x630 for OG)
+    - Generate as images for email/SMS embedding
   - **Challenge CTAs**
     - "Challenge a friend" button with personalized copy
     - "Invite study buddy" for co-practice
     - "Share progress" for parents
+    - Email/SMS delivery of invite links
   - **Deep Links to FVM**
     - 5-question skill check landing page
     - Pre-filled context from share origin
     - Track deep link → FVM completion
+    - Signed links with attribution
   - **Cohort/Classroom Variants**
     - Bulk invite for teachers
     - Group challenge creation
@@ -426,18 +489,65 @@ Diagnostics, practice tests, flashcards produce results pages that:
 
 ### ⏳ Phase 6: Production Hardening & Security
 
-**Goal:** Production-ready features - auth, monitoring, rate limiting, security
+**Goal:** Production-ready features - monitoring, rate limiting, security, compliance
 
-**Production Features:**
-- ⏳ JWT-based authentication & authorization
-- ⏳ Rate limiting & DDoS protection
-- ⏳ Logging & monitoring (structured logs)
-- ⏳ Error tracking (Sentry or similar)
-- ⏳ Performance monitoring & APM
-- ⏳ Testing & CI/CD enhancements
-- ⏳ API documentation (Swagger/OpenAPI)
+**Error Tracking & Monitoring:** ⭐ ENHANCED
+- ⏳ Error tracking service (Sentry, Rollbar, or similar)
+  - Frontend error capture (React errors, network failures)
+  - Backend error capture (API errors, database errors)
+  - Source map upload for stack traces
+  - Error grouping and deduplication
+  - Slack/email alerts for critical errors
+- ⏳ Application Performance Monitoring (APM)
+  - Request/response time tracking
+  - Database query performance
+  - API endpoint latency
+  - Real user monitoring (RUM)
+  - Custom performance metrics
+- ⏳ Logging Infrastructure
+  - Structured JSON logs
+  - Log aggregation (CloudWatch, Datadog, Loggly)
+  - Log retention policies
+  - Searchable log interface
+  - PII redaction in logs
+- ⏳ Uptime Monitoring
+  - Health check endpoints for all services
+  - External uptime monitoring (Pingdom, UptimeRobot)
+  - Status page for users
+  - Incident response procedures
+- ⏳ Analytics & Business Metrics
+  - Beyond K-factor: user engagement, feature adoption
+  - Funnel analytics (registration → FVM → retention)
+  - Revenue tracking (if applicable)
+  - Custom dashboards for stakeholders
+
+**Rate Limiting & Security:**
+- ⏳ API rate limiting (per user, per IP)
+- ⏳ DDoS protection (Cloudflare or similar)
+- ⏳ CSRF protection
+- ⏳ XSS prevention
+- ⏳ SQL injection prevention (Prisma handles this)
+- ⏳ Security headers (CSP, HSTS, etc.)
+- ⏳ Input validation and sanitization
+- ⏳ Secret management (environment variables, vault)
+
+**Testing & Quality:**
+- ⏳ Unit tests for critical functions
+- ⏳ Integration tests for API endpoints
+- ⏳ E2E tests for key user flows
+- ⏳ Load testing (k6, Artillery)
 - ⏳ Security audit and penetration testing
-- ⏳ Load testing and performance optimization
+- ⏳ Accessibility testing (WCAG compliance)
+- ⏳ CI/CD pipeline enhancements
+
+**Documentation & Compliance:**
+- ⏳ API documentation (Swagger/OpenAPI)
+- ⏳ Developer onboarding guide
+- ⏳ Runbook for common operations
+- ⏳ Disaster recovery plan
+- ⏳ Data retention and deletion policies
+- ⏳ GDPR compliance (right to access, right to be forgotten)
+- ⏳ SOC 2 preparation (if required)
 
 ### ⏳ Phase 7: Final Deliverables & Demo (Deliverables #6, #7, #9)
 
