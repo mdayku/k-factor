@@ -199,6 +199,32 @@ export class BehaviorEngine {
     const sessionDuration = this.config.avgSessionDuration * (user.engagementLevel === "high" ? 1.3 : user.engagementLevel === "medium" ? 1.0 : 0.7);
     const endTime = this.addSeconds(startTime, sessionDuration);
 
+    // Phase 4: Presence events (50% of sessions)
+    if (this.shouldOccur(0.5)) {
+      this.addAction(journey, "presence_joined", this.addSeconds(startTime, 5), {
+        subject: user.subject
+      });
+      this.addAction(journey, "presence_left", this.addSeconds(endTime, -5), {
+        subject: user.subject,
+        durationSeconds: sessionDuration
+      });
+    }
+
+    // Phase 4: Cohort room activity (30% of sessions)
+    if (this.shouldOccur(0.3)) {
+      const cohortRoomId = `cohort_${user.subject.toLowerCase()}_${Math.floor(Math.random() * 5) + 1}`;
+      this.addAction(journey, "cohort_joined", this.addSeconds(startTime, 10), {
+        cohortRoomId,
+        roomName: `${user.subject} Masters`,
+        subject: user.subject
+      });
+      this.addAction(journey, "cohort_activity", this.addSeconds(startTime, sessionDuration / 2), {
+        cohortRoomId,
+        activityType: "practice",
+        description: `Completed practice session`
+      });
+    }
+
     // Practice/Learning activities during session
     const numPractices = Math.floor(Math.random() * 3) + 1;
     for (let i = 0; i < numPractices; i++) {
@@ -216,9 +242,33 @@ export class BehaviorEngine {
       });
 
       // Results view
-      this.addAction(journey, "results_view", this.addSeconds(practiceEnd, 5), {
-        showedShareCTA: true
+      const resultsViewTime = this.addSeconds(practiceEnd, 5);
+      this.addAction(journey, "results_view", resultsViewTime, {
+        showedShareCTA: true,
+        score: 60 + Math.random() * 40
       });
+
+      // Phase 4: Results-page viral surfaces
+      // Share button clicked (30% of users)
+      if (this.shouldOccur(0.3 * user.shareability * this.config.viralBoost)) {
+        this.addAction(journey, "share_clicked", this.addSeconds(resultsViewTime, 10), {
+          shareType: "results",
+          variant: user.persona, // student/parent/tutor
+          channel: this.selectChannel(),
+          resultId: `result_${user.userId}_${Date.now()}`
+        });
+      }
+
+      // Challenge created (20% of engaged users after results)
+      if (this.shouldOccur(0.2 * user.shareability * this.config.viralBoost)) {
+        this.addAction(journey, "challenge_created", this.addSeconds(resultsViewTime, 15), {
+          challengeType: Math.random() < 0.5 ? "buddy-challenge" : "study-buddy",
+          subject: user.subject,
+          resultId: `result_${user.userId}_${Date.now()}`,
+          recipientEmail: "friend@example.com"
+        });
+        journey.invitesSent++; // Count as an invite
+      }
     }
 
     this.addAction(journey, "session_end", endTime, {

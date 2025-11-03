@@ -11,7 +11,8 @@ A comprehensive **10x K-Factor** growth system for Varsity Tutors with viral mec
 **Phase 2 Complete**: Simulation engine with synthetic data generation  
 **Phase 3 Complete**: Database deployment (Supabase), seeding, 6 API endpoints  
 **Phase 3.5 Complete**: Authentication system (NextAuth.js), COPPA compliance, legal pages  
-**Phase 4 Next**: Results pages, share cards, viral surfaces, presence layer  
+**Phase 4 ~75% Complete**: Results pages, share cards, FVM landing, presence layer, simulator updated  
+**Next**: Test all features, tune K-factor to 0.8/1.2, comprehensive QA
 
 See [PRD.md](./PRD.md) for complete requirements and roadmap.
 
@@ -128,6 +129,41 @@ NEXTAUTH_SECRET=<generate with: node -e "console.log(require('crypto').randomByt
 - ⏳ Password reset flow
 - ⏳ Email verification
 - ⏳ Multi-factor authentication
+
+## 🎨 Phase 4: Viral Surfaces & Presence Layer
+
+**Status:** UI Complete (~75%), Infrastructure Remaining (WebSocket, Image Gen, Email/SMS)
+
+### Results-Page Share Packs (Deliverable #8)
+- ✅ **Results Page** (`/results/[id]`) - Beautiful score visualization, skills breakdown, share CTAs
+- ✅ **Share Card Component** - 3 variants (student/parent/tutor), copy link, social buttons
+- ✅ **Challenge CTAs** - Buddy Challenge, Streak Rescue, Study Buddy, Tutor Spotlight
+- ✅ **FVM Landing Page** (`/challenge/[id]`) - 5-question skill check, pre-start screen, results screen
+- ✅ **Invite API** (`/api/invites/create`) - Signed links with HMAC, 7-day expiry, event tracking
+- ⏳ **Image Generation** - Canvas API for share cards (Phase 8)
+- ⏳ **Email/SMS** - SendGrid/Twilio integration (Phase 8)
+
+### Real-Time Presence Layer (Deliverable #1)
+- ✅ **Presence Hub** (`/presence`) - Three-tab interface (Presence / Leaderboards / Cohorts)
+- ✅ **Presence Signals** - "X learners online now", friends online, subject activity grid
+- ✅ **Mini Leaderboards** - Subject filter, friends toggle, rank badges (🥇🥈🥉)
+- ✅ **Cohort Rooms** - Room cards, member counts, activity feeds, level badges
+- ⏳ **WebSocket Server** - Replace simulated updates with real-time (Phase 8)
+
+### Simulator Updates
+- ✅ Added `challenge.created`, `challenge.completed` events
+- ✅ Added `share.clicked`, `share.viewed` events
+- ✅ Added `presence.joined`, `presence.left` events
+- ✅ Added `cohort.joined`, `cohort.activity` events
+- ✅ Challenge creation counts as invite (affects K-factor)
+- ⏳ Tune conversion rates to hit K=0.8 (control) and K=1.2 (treatment)
+
+### Testing Checklist
+- ⏳ Test all UI components (8 items)
+- ⏳ Run simulation with new events
+- ⏳ Verify control group K ≥ 0.8
+- ⏳ Verify treatment group K ≥ 1.2
+- ⏳ Verify dashboard metrics
 
 ## 🗄 Database Schema
 

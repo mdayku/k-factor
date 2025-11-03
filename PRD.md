@@ -1,11 +1,11 @@
 # PRD — 10x K-Factor (Production Roadmap)
 
-## 🎯 Current Status: **Phase 3.5 Complete! Phase 4 Ready 🚀**
+## 🎯 Current Status: **Phase 4 UI Complete! Testing & Tuning 🎯**
 
-**All 7 MCP agents** | **Simulation engine live** | **Database deployed (Supabase)** | **1,100+ users seeded** | **18,000+ events** | **6 API endpoints** | **✅ Metrics Dashboard Live** | **✅ Auth System Live**
+**All 7 MCP agents** | **Simulation engine live** | **Database deployed (Supabase)** | **1,100+ users seeded** | **18,000+ events** | **6 API endpoints** | **✅ Metrics Dashboard Live** | **✅ Auth System Live** | **✅ Results-Page Share Packs** | **✅ Presence Layer**
 
-**Latest Milestone:** NextAuth.js integrated, sign-up/sign-in functional, COPPA compliance, legal pages complete  
-**Next Critical:** Phase 4 (Results pages, share cards, viral surfaces, presence layer)
+**Latest Milestone:** Results pages with share cards (3 variants), Challenge CTAs (4 types), FVM landing page, Presence/Leaderboards/Cohort Rooms, Simulator updated with Phase 4 events  
+**Next Critical:** Test all viral surfaces, tune simulator for K=0.8-1.2, comprehensive QA
 
 ---
 
@@ -361,13 +361,15 @@ Diagnostics, practice tests, flashcards produce results pages that:
 - Environment setup: `.env.local` in `apps/web/` (monorepo requirement)
 - Manual migration via Supabase SQL Editor (network restrictions workaround)
 
-### ⏳ Phase 4: Enhanced UI & Real-time (Deliverables #1, #5, #8)
+### 🔄 Phase 4: Enhanced UI & Real-time (Deliverables #1, #5, #8) - ~75% COMPLETE
 
 **Goal:** Build UI that reads from database - dashboard, results pages, presence layer
 
 **Rationale:** Database is now live, users are authenticated, UI can show personalized data
 
-- ⏳ **Metrics Dashboard (Deliverable #5)** - **UNIVERSAL for simulation & real users**
+**Status:** Results pages, share cards, challenge CTAs, FVM landing, presence layer all complete! Remaining: WebSocket, image generation, email/SMS
+
+- ✅ **Metrics Dashboard (Deliverable #5)** - **UNIVERSAL for simulation & real users**
   - **Event-Driven Architecture**
     - Reads from Event table (database) or event stream
     - Works with both simulated and real user events
@@ -399,67 +401,109 @@ Diagnostics, practice tests, flashcards produce results pages that:
     - Chart library (Recharts or similar)
     - Export functionality (CSV/JSON)
 
-- ⏳ **Results-Page Share Packs (Deliverable #8)**
-  - **Image Generation & Storage** ⭐ NEW
+- 🔄 **Results-Page Share Packs (Deliverable #8)** - UI COMPLETE, Infrastructure Remaining
+  - ⏳ **Image Generation & Storage** ⭐ Phase 8
     - Dynamic image generation for share cards (Canvas API or Puppeteer)
     - Cloud storage for generated images (S3, Cloudinary, or similar)
     - CDN for fast image delivery
     - Image optimization (compression, format conversion)
     - Template system for different card types
-  - **Email & SMS Infrastructure** ⭐ NEW
+  - ⏳ **Email & SMS Infrastructure** ⭐ Phase 8
     - Email service provider integration (SendGrid, Postmark, AWS SES)
     - SMS provider integration (Twilio, etc.)
     - Email templates for all invite types
     - SMS templates for urgent invites (Streak Rescue)
     - Delivery tracking and bounce handling
     - Unsubscribe management
-  - **Share Card Generation**
+  - ✅ **Share Card Component** (`/app/components/ShareCard.tsx`)
     - Privacy-safe cards for diagnostics, practice tests, flashcards
-    - Three variants: student, parent, tutor
-    - Include score, skills heatmap (redacted if needed)
-    - Social media friendly dimensions (1200x630 for OG)
-    - Generate as images for email/SMS embedding
-  - **Challenge CTAs**
-    - "Challenge a friend" button with personalized copy
-    - "Invite study buddy" for co-practice
-    - "Share progress" for parents
-    - Email/SMS delivery of invite links
-  - **Deep Links to FVM**
+    - Three variants implemented: student, parent, tutor
+    - Score display, skills heatmap
+    - Social media friendly preview card
+    - Copy link functionality
+    - Social share buttons (Twitter, WhatsApp, Email)
+  - ✅ **Challenge CTAs** (`/app/components/ChallengeCTA.tsx`)
+    - "Buddy Challenge" - Beat my score with streak shields
+    - "Streak Rescue" - Phone-a-friend for at-risk streaks
+    - "Study Buddy" - Co-practice invites
+    - "Tutor Spotlight" - Share with parents
+    - Email invite form with success states
+    - Reward messaging for both parties
+  - ✅ **Deep Links to FVM** (`/app/challenge/[id]/page.tsx`)
     - 5-question skill check landing page
-    - Pre-filled context from share origin
-    - Track deep link → FVM completion
-    - Signed links with attribution
-  - **Cohort/Classroom Variants**
+    - Pre-start screen with referrer details
+    - Question screen with progress bar
+    - Results screen with win/loss comparison
+    - Sign-up CTA to claim rewards
+    - Event tracking (invite.opened, fvm.reached)
+  - ✅ **Invite Creation API** (`/app/api/invites/create/route.ts`)
+    - Signed link generation with HMAC signatures
+    - Short code generation (base64url)
+    - 7-day expiration
+    - Tracks invite.sent events
+    - Ready for email integration
+  - ⏳ **Cohort/Classroom Variants** - Phase 8
     - Bulk invite for teachers
     - Group challenge creation
     - Classroom leaderboard integration
-  - **Results Page Redesign**
-    - Integrate share functionality into existing results pages
-    - Show "X friends challenged" social proof
-    - Results-page impressions → share clicks tracking
+  - ✅ **Results Page Template** (`/app/results/[id]/page.tsx`)
+    - Beautiful score visualization
+    - Skills breakdown with progress bars
+    - Share card integrated
+    - Challenge CTAs prominently featured
+    - "What's Next?" section with clear CTAs
 
-- ⏳ **Real-Time Presence Layer (Deliverable #1 completion)**
-  - **WebSocket Infrastructure**
+- 🔄 **Real-Time Presence Layer (Deliverable #1 completion)** - UI COMPLETE, WebSocket Remaining
+  - ⏳ **WebSocket Infrastructure** ⭐ Phase 8
     - WebSocket server for presence updates
     - Connection pooling and scaling considerations
     - Heartbeat/keepalive mechanism
-  - **Presence Signals**
-    - "28 peers practicing Algebra now" live count
-    - "Friends online now" indicators
-    - Subject-specific activity streams
-  - **Interactive Leaderboards**
-    - Real-time rank updates with simulated data
-    - Per-subject leaderboards
-    - Friend leaderboards (filtered view)
-    - Animations for rank changes
-  - **Cohort Rooms**
-    - Live cohort activity feed
-    - Co-practice session initiation
-    - Shared practice goals and progress
-  - **Integration with Simulation**
-    - Feed simulated presence data to WebSocket
-    - Realistic presence patterns (peak hours)
-    - Demo mode with accelerated activity
+  - ✅ **Presence Hub** (`/app/presence/page.tsx`)
+    - Three-tab interface: Presence / Leaderboards / Cohorts
+    - Beautiful gradient design with tab navigation
+    - Responsive layout, smooth transitions
+  - ✅ **Presence Signals Component** (`/app/components/PresenceSignals.tsx`)
+    - "X learners online now" with live badge
+    - "Friends online" section with join buttons
+    - Subject activity grid with trend indicators (📈📉➡️)
+    - Real-time updates (simulated every 5 seconds)
+    - "Join the action!" CTA
+  - ✅ **Mini Leaderboard Component** (`/app/components/MiniLeaderboard.tsx`)
+    - Subject selector dropdown (Algebra, Geometry, Chemistry, etc.)
+    - Friends filter checkbox
+    - Rank badges (🥇🥈🥉) for top 3
+    - User highlighting with blue border
+    - Score, streak (🔥), and friend indicators (👥)
+    - "Challenge top players" CTA
+  - ✅ **Cohort Rooms Component** (`/app/components/CohortRooms.tsx`)
+    - Room cards with name, subject, level badge
+    - Member count and online count (🟢 live)
+    - Room goals and recent activity
+    - Level color coding (beginner/intermediate/advanced)
+    - Detailed room view with activity feed
+    - "Start Co-Practice" and "Invite Friends" buttons
+    - "Create Cohort Room" CTA
+  - ✅ **Simulator Integration**
+    - Added presence.joined, presence.left events
+    - Added cohort.joined, cohort.activity events
+    - 50% of sessions generate presence events
+    - 30% of sessions generate cohort activity
+
+**Phase 4 Simulator Updates (All Complete):**
+- ✅ Added `challenge.created` event (20% of results views by engaged users)
+- ✅ Added `challenge.completed` event (for FVM completion tracking)
+- ✅ Added `share.clicked` event (30% of results views × shareability)
+- ✅ Added `share.viewed` event (for share link tracking)
+- ✅ Added `presence.joined/left` events (50% of sessions)
+- ✅ Added `cohort.joined/activity` events (30% of sessions)
+- ✅ Challenge creation counts as an invite (affects K-factor)
+- ⏳ **Next:** Tune conversion rates to hit K=0.8 (control) and K=1.2 (treatment)
+
+**Testing Plan:**
+- ⏳ Test all UI components (results, share cards, challenges, FVM, presence, leaderboards, cohorts)
+- ⏳ Run simulation with new events and verify data flows to dashboard
+- ⏳ Tune simulator parameters to achieve target K-factors (0.8 / 1.2)
+- ⏳ Verify all 4 viral loops are functioning end-to-end
 
 ### ⏳ Phase 5: Session Intelligence & Agentic Actions (Deliverable #3)
 

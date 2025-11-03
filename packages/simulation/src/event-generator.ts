@@ -234,6 +234,125 @@ export class EventGenerator {
           }
         });
         break;
+
+      // New Phase 4 events
+      case "challenge_created":
+        events.push({
+          type: "challenge.created",
+          ts,
+          userId: user.userId,
+          sessionId: sid,
+          surface,
+          metadata: {
+            challengeType: action.metadata?.challengeType || "buddy-challenge",
+            subject: action.metadata?.subject,
+            resultId: action.metadata?.resultId,
+            recipientEmail: action.metadata?.recipientEmail
+          }
+        });
+        break;
+
+      case "challenge_completed":
+        events.push({
+          type: "challenge.completed",
+          ts,
+          userId: user.userId,
+          sessionId: sid,
+          surface,
+          metadata: {
+            challengeId: action.metadata?.challengeId,
+            score: action.metadata?.score,
+            beatReferrer: action.metadata?.beatReferrer
+          }
+        });
+        break;
+
+      case "share_clicked":
+        events.push({
+          type: "share.clicked",
+          ts,
+          userId: user.userId,
+          sessionId: sid,
+          surface,
+          metadata: {
+            shareType: action.metadata?.shareType || "results",
+            variant: action.metadata?.variant, // student/parent/tutor
+            channel: action.metadata?.channel, // twitter/whatsapp/email
+            resultId: action.metadata?.resultId
+          }
+        });
+        break;
+
+      case "share_viewed":
+        events.push({
+          type: "share.viewed",
+          ts,
+          userId: null, // Not yet a user
+          sessionId: `new_${Date.now()}`,
+          surface,
+          metadata: {
+            shareId: action.metadata?.shareId,
+            referrerId: action.metadata?.referrerId
+          }
+        });
+        break;
+
+      case "presence_joined":
+        events.push({
+          type: "presence.joined",
+          ts,
+          userId: user.userId,
+          sessionId: sid,
+          surface,
+          metadata: {
+            subject: action.metadata?.subject
+          }
+        });
+        break;
+
+      case "presence_left":
+        events.push({
+          type: "presence.left",
+          ts,
+          userId: user.userId,
+          sessionId: sid,
+          surface,
+          metadata: {
+            subject: action.metadata?.subject,
+            durationSeconds: action.metadata?.durationSeconds
+          }
+        });
+        break;
+
+      case "cohort_joined":
+        events.push({
+          type: "cohort.joined",
+          ts,
+          userId: user.userId,
+          sessionId: sid,
+          surface,
+          metadata: {
+            cohortRoomId: action.metadata?.cohortRoomId,
+            roomName: action.metadata?.roomName,
+            subject: action.metadata?.subject
+          }
+        });
+        break;
+
+      case "cohort_activity":
+        events.push({
+          type: "cohort.activity",
+          ts,
+          userId: user.userId,
+          sessionId: sid,
+          surface,
+          metadata: {
+            cohortRoomId: action.metadata?.cohortRoomId,
+            activityType: action.metadata?.activityType, // practice/challenge/milestone
+            description: action.metadata?.description
+          }
+        });
+        break;
     }
 
     return events;
