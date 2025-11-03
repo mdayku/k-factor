@@ -3,7 +3,7 @@
  * Chooses which viral loop to trigger based on context, eligibility, and throttling
  */
 
-import type { OrchestratoreRequest, OrchestratorResponse } from "mcp-protocol";
+import type { OrchestratorRequest, OrchestratorResponse } from "mcp-protocol";
 
 const LOOP_ELIGIBILITY_RULES = {
   buddy_challenge: (ctx: any) => ctx.persona === "student" && ctx.trigger === "results_page",

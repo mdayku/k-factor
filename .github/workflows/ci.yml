@@ -41,11 +41,17 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Build packages first (needed for type checking)
+        run: |
+          pnpm --filter event-schema run build || true
+          pnpm --filter mcp-protocol run build || true
+          pnpm --filter sdk run build || true
+
       - name: Type check packages
         run: |
-          pnpm --filter @app/event-schema run typecheck || true
-          pnpm --filter @app/mcp-protocol run typecheck || true
-          pnpm --filter @app/sdk run typecheck || true
+          pnpm --filter event-schema run typecheck || true
+          pnpm --filter mcp-protocol run typecheck || true
+          pnpm --filter sdk run typecheck || true
 
       - name: Type check apps
         run: |
@@ -76,6 +82,8 @@ jobs:
 
       - name: Validate Prisma schema
         run: npx prisma validate
+        env:
+          DATABASE_URL: "postgresql://user:password@localhost:5432/ci_test?schema=public"
 
       - name: Check Prisma format
         run: npx prisma format --check
@@ -117,12 +125,14 @@ jobs:
 
       - name: Generate Prisma Client
         run: npx prisma generate
+        env:
+          DATABASE_URL: "postgresql://user:password@localhost:5432/ci_test?schema=public"
 
       - name: Build packages
         run: |
-          pnpm --filter @app/event-schema run build || echo "No build script"
-          pnpm --filter @app/mcp-protocol run build || echo "No build script"
-          pnpm --filter @app/sdk run build || echo "No build script"
+          pnpm --filter event-schema run build || echo "No build script"
+          pnpm --filter mcp-protocol run build || echo "No build script"
+          pnpm --filter sdk run build || echo "No build script"
 
       - name: Build agents service
         run: pnpm --filter @app/agents run build || echo "Build completed or no build script"

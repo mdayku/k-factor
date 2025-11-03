@@ -119,8 +119,13 @@ function determineTone(
 
 function getCopyTemplate(loop: string, persona: string, tone: string): any {
   const templates = COPY_TEMPLATES[loop as keyof typeof COPY_TEMPLATES] || COPY_TEMPLATES.buddy_challenge;
-  const personaTemplates = templates[persona as keyof typeof templates] || templates.student;
-  const toneTemplate = (personaTemplates as any)[tone] || (personaTemplates as any).friendly;
+  const personaTemplates = templates[persona as keyof typeof templates] || 
+                           (templates as any).student || 
+                           (templates as any).parent || 
+                           Object.values(templates)[0];
+  const toneTemplate = (personaTemplates as any)[tone] || 
+                       (personaTemplates as any).friendly || 
+                       Object.values(personaTemplates)[0];
   
   return toneTemplate || {
     headline: "Join me on Varsity Tutors!",
