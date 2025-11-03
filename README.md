@@ -1,5 +1,8 @@
 # VT K-Factor - Production-Ready Growth System
 
+![CI Status](https://github.com/mdayku/k-factor/actions/workflows/ci.yml/badge.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 A comprehensive **10x K-Factor** growth system for Varsity Tutors with viral mechanics, AI-powered agentic actions, and closed-loop attribution. Built to achieve **K ≥ 1.20** with privacy-safe, COPPA/FERPA-compliant defaults.
 
 ## 🎯 Project Status

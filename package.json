@@ -8,7 +8,12 @@
   "scripts": {
     "dev": "concurrently -n web,agents,attr \"pnpm --filter @app/web dev\" \"pnpm --filter @app/agents dev\" \"pnpm --filter @app/attribution dev\"",
     "build": "pnpm -r build",
-    "test": "echo \"(tests TBD)\""
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "prisma:validate": "npx prisma validate",
+    "prisma:format": "npx prisma format",
+    "prisma:generate": "npx prisma generate",
+    "ci": "pnpm install --frozen-lockfile && pnpm prisma:generate && pnpm typecheck && pnpm build && pnpm test"
   },
   "devDependencies": {
     "concurrently": "^9.0.0"
