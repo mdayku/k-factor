@@ -1,0 +1,23 @@
+{
+  "name": "simulation",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "dev": "tsc -w",
+    "typecheck": "tsc --noEmit",
+    "test": "echo 'No tests yet for simulation'",
+    "simulate": "node dist/runner.js"
+  },
+  "dependencies": {
+    "event-schema": "workspace:*",
+    "mcp-protocol": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "@types/node": "^22.7.4"
+  }
+}
+

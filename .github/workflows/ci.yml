@@ -46,12 +46,14 @@ jobs:
           pnpm --filter event-schema run build || true
           pnpm --filter mcp-protocol run build || true
           pnpm --filter sdk run build || true
+          pnpm --filter simulation run build || true
 
       - name: Type check packages
         run: |
           pnpm --filter event-schema run typecheck || true
           pnpm --filter mcp-protocol run typecheck || true
           pnpm --filter sdk run typecheck || true
+          pnpm --filter simulation run typecheck || true
 
       - name: Type check apps
         run: |
@@ -133,6 +135,7 @@ jobs:
           pnpm --filter event-schema run build || echo "No build script"
           pnpm --filter mcp-protocol run build || echo "No build script"
           pnpm --filter sdk run build || echo "No build script"
+          pnpm --filter simulation run build || echo "No build script"
 
       - name: Build agents service
         run: pnpm --filter @app/agents run build || echo "Build completed or no build script"
@@ -201,6 +204,7 @@ jobs:
         run: |
           pnpm --filter event-schema run build
           pnpm --filter mcp-protocol run build
+          pnpm --filter simulation run build
 
       - name: Build agents service
         run: pnpm --filter @app/agents run build
