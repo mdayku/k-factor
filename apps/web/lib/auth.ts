@@ -55,6 +55,7 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           role: user.role,
           image: user.image,
+          hasCompletedOnboarding: user.hasCompletedOnboarding,
         };
       },
     }),
