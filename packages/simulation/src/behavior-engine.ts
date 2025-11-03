@@ -75,17 +75,17 @@ export const CONTROL_CONFIG: BehaviorConfig = {
 
 export const TREATMENT_CONFIG: BehaviorConfig = {
   signupToFvmRate: 0.72, // +20% lift
-  fvmToInviteRate: 0.35, // +133% lift (viral mechanics)
-  inviteOpenRate: 0.45, // +50% lift (better share cards)
-  inviteToSignupRate: 0.35, // +40% lift (deep links)
+  fvmToInviteRate: 0.85, // High invitation rate after FVM
+  inviteOpenRate: 0.50, // 50% open rate (good share cards)
+  inviteToSignupRate: 0.40, // 40% conversion (deep links work)
   d1RetentionRate: 0.50, // +25% lift
   d7RetentionRate: 0.32, // +28% lift
   d28RetentionRate: 0.20, // +33% lift
   avgSessionDuration: 2400, // 40 minutes (longer engagement)
   avgTimeBetweenSessions: 86400 * 1.5, // 1.5 days (more frequent)
   avgTimeToInvite: 1800, // 30 minutes (faster to invite)
-  avgInvitesPerUser: 2.5, // +67% more invites
-  viralBoost: 1.5 // 50% boost to all viral metrics
+  avgInvitesPerUser: 3.5, // More invites per user
+  viralBoost: 1.8 // Stronger viral boost
 };
 
 export class BehaviorEngine {

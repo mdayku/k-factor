@@ -267,16 +267,7 @@ Diagnostics, practice tests, flashcards produce results pages that:
   - ✅ K-factor readout with ✅/❌ target validation
   - ✅ Fraud detection and COPPA compliance demonstration
 
-- ⏳ **Visual Metrics Dashboard (Deliverable #5)**
-  - ⏳ Live K-factor readout with success flag (K ≥ 1.20)
-  - ⏳ Funnel visualizations (invite → open → join → FVM)
-  - ⏳ Cohort comparison charts (control vs treatment)
-  - ⏳ Agent decision logs and rationales
-  - ⏳ Retention curves (D1/D7/D28) with cohort comparison
-  - ⏳ Fraud detection events timeline
-  - **Note:** CLI runner provides all metrics in text format
-
-### ⏳ Phase 3: Session Intelligence & Agentic Actions (Deliverable #3)
+### ⏳ Phase 3: Session Intelligence & Agentic Actions (Deliverable #3) - NEXT
 
 **Goal:** Implement transcription → summary → agentic actions → viral loops pipeline
 
@@ -316,9 +307,41 @@ Diagnostics, practice tests, flashcards produce results pages that:
   - Simulate agentic actions in Phase 2 simulation data
   - Store all actions in `AgenticAction` table
 
-### ⏳ Phase 4: Enhanced UI & Real-time (Deliverables #1, #8)
+### ⏳ Phase 4: Enhanced UI & Real-time (Deliverables #1, #5, #8)
 
-**Goal:** Complete thin-slice prototype with real-time features and results-page share packs
+**Goal:** Complete thin-slice prototype with real-time features, metrics dashboard, and results-page share packs
+
+- ⏳ **Metrics Dashboard (Deliverable #5)** - **UNIVERSAL for simulation & real users**
+  - **Event-Driven Architecture**
+    - Reads from Event table (database) or event stream
+    - Works with both simulated and real user events
+    - Real-time updates via WebSocket or polling
+  - **K-Factor Tracking**
+    - Live K-factor calculation from invite events
+    - Funnel visualization: invite → open → signup → FVM
+    - Historical trends and current rate
+    - Success indicator (K ≥ 1.20)
+  - **Cohort Comparison**
+    - Side-by-side control vs treatment metrics
+    - Statistical significance indicators
+    - Lift percentages for all key metrics
+  - **Retention Curves**
+    - D1, D7, D28 retention visualization
+    - Cohort-specific curves
+    - Retention funnel breakdown
+  - **Agent Decision Logs**
+    - View all agent decisions with rationales
+    - Filter by agent type, user, time range
+    - Auditability for all MCP calls
+  - **Fraud & Compliance Monitoring**
+    - Fraud detection event timeline
+    - COPPA compliance violations
+    - Trust & Safety agent actions
+  - **Built in Next.js**
+    - Integrated with existing web app
+    - Uses event schema for type safety
+    - Chart library (Recharts or similar)
+    - Export functionality (CSV/JSON)
 
 - ⏳ **Results-Page Share Packs (Deliverable #8)**
   - **Share Card Generation**
@@ -614,10 +637,9 @@ All core simulation components are implemented and ready to demonstrate metrics:
 6. ✅ Fraud injection (5-10 patterns for Trust & Safety demonstration)
 7. ✅ COPPA test cases (minors with/without consent)
 
-⏳ **Remaining:**
-- Metrics dashboard (live K-factor visualization, funnel charts, cohort comparisons)
-
 **Current deliverable:** Run `pnpm --filter simulation run simulate` to see full A/B experiment results with K-factor, retention, FVM lift, and referral mix metrics!
+
+**Note:** Visual metrics dashboard moved to Phase 4 (UI work) - CLI provides all metrics for now.
 
 ---
 
