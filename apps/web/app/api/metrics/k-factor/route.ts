@@ -175,30 +175,32 @@ export async function GET(request: NextRequest) {
     });
 
     // Count seed users (users NOT referred by anyone)
-    const seedUsers = await prisma.user.count({
+    // For simulated users: Check account.created events WITHOUT referrerSignedLinkId
+    // For real users: Check Attribution table
+    const seedUserAccountCreatedEvents = await prisma.event.findMany({
       where: {
-        ...(simulationId && { simulationId }),
-        ...(isSimulated !== null && { isSimulated: isSimulated === 'true' }),
-        // Seed users have no referrer in Attribution table
-        NOT: {
-          receivedInvites: {
-            some: {}
-          }
+        ...baseWhere,
+        type: 'account.created',
+        metadata: {
+          path: ['referrerSignedLinkId'],
+          equals: null
         }
-      }
+      },
+      select: { userId: true },
+      distinct: ['userId']
     });
+    
+    const seedUsers = seedUserAccountCreatedEvents.filter(e => e.userId !== null).length;
 
     // Count referred users (users who signed up via invites)
     // Use invitesAccepted, which counts account.created events with referrerSignedLinkId
     const referredUsers = invitesAccepted;
 
-    // Calculate K-factor correctly: referred users / seed users
-    // This measures how many new users each existing user brings in
-    const kFactor = seedUsers > 0 ? referredUsers / seedUsers : 0;
-
-    // Also calculate traditional metrics for context
-    const invitesPerUser = seedUsers > 0 ? invitesSent / seedUsers : 0; // Changed from totalUsers
+    // Calculate K-factor per instructions: K = (invites per user) × (invite conversion rate)
+    // Using seed users in denominator to measure efficiency of original cohort
+    const invitesPerUser = seedUsers > 0 ? invitesSent / seedUsers : 0;
     const inviteConversionRate = invitesSent > 0 ? invitesAccepted / invitesSent : 0;
+    const kFactor = invitesPerUser * inviteConversionRate; // Simplifies to: referredUsers / seedUsers
 
     // Calculate K-factor breakdown by loop (weighted by actual usage)
     // Use seedUsers for proper K-factor calculation
@@ -209,58 +211,55 @@ export async function GET(request: NextRequest) {
     let cohortBreakdown = null;
     if (!cohort) {
       // Count seed users per cohort
-      // Get all userIds from account.created events for each cohort
-      const controlUsers = await prisma.event.findMany({
+      // Get SEED users (account.created WITHOUT referrerSignedLinkId) for each cohort
+      const controlSeedUserEvents = await prisma.event.findMany({
         where: {
           ...baseWhere,
           type: 'account.created',
-          metadata: {
-            path: ['cohort'],
-            equals: 'control'
-          }
+          AND: [
+            {
+              metadata: {
+                path: ['cohort'],
+                equals: 'control'
+              }
+            },
+            {
+              metadata: {
+                path: ['referrerSignedLinkId'],
+                equals: null
+              }
+            }
+          ]
         },
         select: { userId: true },
         distinct: ['userId']
       });
 
-      const treatmentUsers = await prisma.event.findMany({
+      const treatmentSeedUserEvents = await prisma.event.findMany({
         where: {
           ...baseWhere,
           type: 'account.created',
-          metadata: {
-            path: ['cohort'],
-            equals: 'treatment'
-          }
+          AND: [
+            {
+              metadata: {
+                path: ['cohort'],
+                equals: 'treatment'
+              }
+            },
+            {
+              metadata: {
+                path: ['referrerSignedLinkId'],
+                equals: null
+              }
+            }
+          ]
         },
         select: { userId: true },
         distinct: ['userId']
       });
 
-      // Filter out null userIds and referred users (those in Attribution table)
-      const controlUserIds = controlUsers.map(u => u.userId).filter((id): id is string => id !== null);
-      const treatmentUserIds = treatmentUsers.map(u => u.userId).filter((id): id is string => id !== null);
-
-      const controlSeedUsers = await prisma.user.count({
-        where: {
-          id: { in: controlUserIds },
-          NOT: {
-            receivedInvites: {
-              some: {}
-            }
-          }
-        }
-      });
-
-      const treatmentSeedUsers = await prisma.user.count({
-        where: {
-          id: { in: treatmentUserIds },
-          NOT: {
-            receivedInvites: {
-              some: {}
-            }
-          }
-        }
-      });
+      const controlSeedUsers = controlSeedUserEvents.filter(e => e.userId !== null).length;
+      const treatmentSeedUsers = treatmentSeedUserEvents.filter(e => e.userId !== null).length;
       
       // Calculate weighted K-factor for control group
       const controlLoopBreakdown = await calculateLoopBreakdown(baseWhere, 'control', controlSeedUsers);
@@ -335,16 +334,14 @@ export async function GET(request: NextRequest) {
         }
       });
 
-      // Calculate K-factor correctly: referred users / seed users
-      const controlK = controlSeedUsers > 0 ? controlInvitesAccepted / controlSeedUsers : 0;
-      const treatmentK = treatmentSeedUsers > 0 ? treatmentInvitesAccepted / treatmentSeedUsers : 0;
-
-      // Traditional metrics for context
+      // Calculate K-factor per instructions: K = (invites per user) × (invite conversion rate)
       const controlInvitesPerUser = controlSeedUsers > 0 ? controlInvitesSent / controlSeedUsers : 0;
       const controlConversionRate = controlInvitesSent > 0 ? controlInvitesAccepted / controlInvitesSent : 0;
+      const controlK = controlInvitesPerUser * controlConversionRate;
       
       const treatmentInvitesPerUser = treatmentSeedUsers > 0 ? treatmentInvitesSent / treatmentSeedUsers : 0;
       const treatmentConversionRate = treatmentInvitesSent > 0 ? treatmentInvitesAccepted / treatmentInvitesSent : 0;
+      const treatmentK = treatmentInvitesPerUser * treatmentConversionRate;
 
       cohortBreakdown = {
         control: {

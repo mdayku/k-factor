@@ -11,11 +11,16 @@ import { useSession } from "next-auth/react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Route } from "next";
+import { useTracking, useScrollTracking } from "../../../hooks/useTracking";
 
 function ResultsContent() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const router = useRouter();
+  
+  // Event tracking for AI retraining
+  const { trackClick, trackFormSubmit } = useTracking("Practice Results");
+  useScrollTracking(90);
   
   const score = parseInt(searchParams.get("score") || "0");
   const total = parseInt(searchParams.get("total") || "10");
@@ -73,6 +78,12 @@ function ResultsContent() {
 
   const handleSendInvite = async () => {
     if (!session?.user || !recipientEmail) return;
+
+    // Track invite form submission
+    trackFormSubmit("Send Invite", { 
+      score: percentage, 
+      recipientEmail: recipientEmail.substring(0, 3) + "***" // Privacy: partial email
+    });
 
     try {
       // Create invite via API

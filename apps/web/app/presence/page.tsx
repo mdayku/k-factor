@@ -10,9 +10,20 @@ import { useState, useEffect } from "react";
 import PresenceSignals from "../components/PresenceSignals";
 import MiniLeaderboard from "../components/MiniLeaderboard";
 import CohortRooms from "../components/CohortRooms";
+import { useTracking, useScrollTracking } from "../../hooks/useTracking";
 
 export default function PresencePage() {
   const [activeTab, setActiveTab] = useState<"presence" | "leaderboards" | "cohorts">("presence");
+  
+  // Event tracking for AI retraining
+  const { trackClick } = useTracking("Presence Page");
+  useScrollTracking(80);
+  
+  // Track tab switches
+  const handleTabSwitch = (tab: "presence" | "leaderboards" | "cohorts") => {
+    trackClick("Tab Switch", { tab });
+    setActiveTab(tab);
+  };
 
   return (
     <div style={{
@@ -52,7 +63,7 @@ export default function PresencePage() {
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => handleTabSwitch(tab.id as any)}
               style={{
                 padding: "16px 32px",
                 background: activeTab === tab.id ? "white" : "rgba(255,255,255,0.2)",

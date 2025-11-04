@@ -338,8 +338,7 @@ export default function Dashboard() {
                 <MetricCard
                   label="K-Factor"
                   value={(kFactorData.kFactor ?? 0).toFixed(3)}
-                  target="≥ 1.20"
-                  isGood={(kFactorData.kFactor ?? 0) >= 1.20}
+                  isGood={(kFactorData.kFactor ?? 0) >= 1.0}
                 />
                 <MetricCard
                   label="Invites Per User"
@@ -366,12 +365,14 @@ export default function Dashboard() {
                       <div style={{ fontSize: "24px", fontWeight: "bold" }}>
                         {(kFactorData.cohortBreakdown.control.kFactor ?? 0).toFixed(3)}
                       </div>
+                      <div style={{ fontSize: "12px", color: "#999", marginTop: "4px" }}>Target = 0.8</div>
                     </div>
                     <div>
                       <div style={{ fontSize: "12px", color: "#666", marginBottom: "4px" }}>Treatment</div>
                       <div style={{ fontSize: "24px", fontWeight: "bold", color: "#0070f3" }}>
                         {(kFactorData.cohortBreakdown.treatment.kFactor ?? 0).toFixed(3)}
                       </div>
+                      <div style={{ fontSize: "12px", color: "#999", marginTop: "4px" }}>Target = 1.2</div>
                     </div>
                     <div>
                       <div style={{ fontSize: "12px", color: "#666", marginBottom: "4px" }}>Lift</div>
@@ -475,58 +476,6 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Cohort Comparison */}
-          {cohortData && cohortData.lifts && selectedCohort === "all" && (
-            <div style={{
-              padding: "24px",
-              background: "white",
-              border: "1px solid #e0e0e0",
-              borderRadius: "8px",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.05)"
-            }}>
-              <h2 style={{ fontSize: "20px", fontWeight: "600", marginBottom: "16px" }}>
-                ⚖️ Control vs Treatment
-              </h2>
-              
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", marginBottom: "24px" }}>
-                <LiftCard
-                  label="K-Factor Lift"
-                  lift={cohortData.lifts.kFactor ?? 0}
-                  target={1000} // 1000% = 10x
-                />
-                <LiftCard
-                  label="FVM Lift"
-                  lift={cohortData.lifts.fvmRate ?? 0}
-                  target={20}
-                />
-                <LiftCard
-                  label="D7 Retention Lift"
-                  lift={cohortData.lifts.d7Retention ?? 0}
-                  target={10}
-                />
-              </div>
-
-              {cohortData.summary && (
-                <div style={{
-                  padding: "16px",
-                  background: cohortData.summary.isSignificant ? "#e8f5e9" : "#fff3e0",
-                  border: `1px solid ${cohortData.summary.isSignificant ? "#4caf50" : "#ff9800"}`,
-                  borderRadius: "4px"
-                }}>
-                  <div style={{ fontWeight: "600", marginBottom: "8px" }}>
-                    {cohortData.summary.isSignificant ? "✅ Statistically Significant" : "⚠️ Not Yet Significant"}
-                  </div>
-                  {cohortData.summary.targetsMet && (
-                    <div style={{ fontSize: "14px", color: "#666" }}>
-                      Targets: K≥1.20: {cohortData.summary.targetsMet.kFactorAbove120 ? "✅" : "❌"} | 
-                      FVM+20%: {cohortData.summary.targetsMet.fvmLiftAbove20 ? "✅" : "❌"} | 
-                      Retention+10%: {cohortData.summary.targetsMet.retentionLiftAbove10 ? "✅" : "❌"}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
 
           {/* Agent Logs Toggle */}
           <div style={{

@@ -59,32 +59,31 @@ export async function GET(request: NextRequest) {
       ]);
 
       // Count seed users (not referred) for proper K-factor calculation
-      // First get all userIds for this cohort from account.created events
-      const cohortUsers = await prisma.event.findMany({
+      // Get account.created events WITHOUT referrerSignedLinkId for this cohort
+      const seedUserEvents = await prisma.event.findMany({
         where: {
           ...baseWhere,
           type: 'account.created',
-          metadata: {
-            path: ['cohort'],
-            equals: cohort
-          }
+          AND: [
+            {
+              metadata: {
+                path: ['cohort'],
+                equals: cohort
+              }
+            },
+            {
+              metadata: {
+                path: ['referrerSignedLinkId'],
+                equals: null
+              }
+            }
+          ]
         },
         select: { userId: true },
         distinct: ['userId']
       });
 
-      // Filter out null userIds and then count how many are NOT referred
-      const userIds = cohortUsers.map(u => u.userId).filter((id): id is string => id !== null);
-      const seedUsers = await prisma.user.count({
-        where: {
-          id: { in: userIds },
-          NOT: {
-            receivedInvites: {
-              some: {}
-            }
-          }
-        }
-      });
+      const seedUsers = seedUserEvents.filter(e => e.userId !== null).length;
 
       // Calculate metrics
       const fvmRate = accountsCreated > 0 ? (fvmReached / accountsCreated) * 100 : 0;

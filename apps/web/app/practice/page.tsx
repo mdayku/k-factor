@@ -15,6 +15,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import type { Route } from "next";
+import { useTracking, useScrollTracking } from "../../hooks/useTracking";
 
 interface Question {
   id: string;
@@ -38,6 +39,10 @@ interface Progress {
 export default function PracticePage() {
   const { data: session } = useSession();
   const router = useRouter();
+  
+  // Event tracking for AI retraining
+  const { trackClick, trackFormSubmit } = useTracking("Practice Page");
+  useScrollTracking(75);
   
   const [view, setView] = useState<"menu" | "practice" | "review">("menu");
   const [units, setUnits] = useState<string[]>([]);
@@ -81,6 +86,9 @@ export default function PracticePage() {
   }, []);
 
   const startPractice = async (unit: string | null, isFinal = false) => {
+    // Track practice start
+    trackClick("Start Practice", { unit, isFinal });
+    
     setSelectedUnit(unit);
     setLoading(true);
     

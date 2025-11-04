@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { sendParentalConsentEmail } from "../../../../lib/email";
 
 const prisma = new PrismaClient();
 
@@ -25,18 +26,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const data = signupSchema.parse(body);
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email: data.email },
-    });
-
-    if (existingUser) {
-      return NextResponse.json(
-        { error: "User already exists" },
-        { status: 400 }
-      );
-    }
-
     // Check COPPA compliance (users under 13)
     const isMinor = data.age < 13;
     const coppaCompliant = !isMinor || !!data.parentEmail;
@@ -53,6 +42,45 @@ export async function POST(request: NextRequest) {
 
     // Hash password
     const hashedPassword = await bcrypt.hash(data.password, 12);
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: data.email },
+    });
+
+    if (existingUser) {
+      // If user exists and is a minor without consent, resend the email
+      if (existingUser.isMinor && !existingUser.parentalConsent && data.parentEmail) {
+        // Find existing consent request
+        const consentRequest = await prisma.parentalConsent.findFirst({
+          where: {
+            childUserId: existingUser.id,
+            consentGiven: false,
+            expiresAt: { gt: new Date() }
+          }
+        });
+
+        if (consentRequest) {
+          // Resend the consent email
+          const emailSent = await sendParentalConsentEmail(data.parentEmail, consentRequest.consentToken);
+          
+          return NextResponse.json({
+            success: true,
+            message: emailSent 
+              ? "Parental consent email resent. Check your inbox." 
+              : "Account exists. Check console for parental consent link.",
+            userId: existingUser.id,
+            requiresParentalConsent: true,
+            emailSent,
+          });
+        }
+      }
+
+      return NextResponse.json(
+        { error: "User with this email already exists" },
+        { status: 400 }
+      );
+    }
 
     // Create user
     const user = await prisma.user.create({
@@ -87,14 +115,17 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // TODO: Send consent email to parent
-      // await sendParentalConsentEmail(data.parentEmail, consentToken);
+      // Send consent email to parent
+      const emailSent = await sendParentalConsentEmail(data.parentEmail, consentToken);
 
       return NextResponse.json({
         success: true,
-        message: "Account created. Parental consent email sent.",
+        message: emailSent 
+          ? "Account created. Parental consent email sent." 
+          : "Account created. Check console for parental consent link.",
         userId: user.id,
         requiresParentalConsent: true,
+        emailSent,
       });
     }
 
