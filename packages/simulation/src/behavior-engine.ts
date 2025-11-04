@@ -4,6 +4,8 @@
  */
 
 import type { SyntheticUser } from "./user-generator.js";
+import { copyKit } from "copy-kit";
+import type { ViralLoop, Persona } from "copy-kit";
 
 export type UserAction = 
   | "signup"
@@ -350,6 +352,9 @@ export class BehaviorEngine {
         const selectedLoop = this.selectViralLoop(user.persona);
         const loopMetrics = this.getLoopMetrics(selectedLoop);
         
+        // Generate personalized copy for challenge invite
+        const inviteCopy = this.generateInviteCopy(selectedLoop, user.persona, user);
+        
         this.addAction(journey, "challenge_created", this.addSeconds(resultsViewTime, 15), {
           challengeType: selectedLoop,
           subject: user.subject,
@@ -358,6 +363,8 @@ export class BehaviorEngine {
           // Store loop metrics
           loopOpenRate: loopMetrics.openRate,
           loopConversionRate: loopMetrics.conversionRate,
+          // Add personalized copy from copy-kit
+          copy: inviteCopy,
         });
         journey.invitesSent++; // Count as an invite
       }
@@ -373,12 +380,17 @@ export class BehaviorEngine {
         // Send realistic number of invites (2-4 per activation)
         const numInvites = Math.ceil(loopMetrics.invites * user.shareability);
         
+        // Generate personalized copy for this invite burst
+        const inviteCopy = this.generateInviteCopy(selectedLoop, user.persona, user);
+        
         for (let inviteIdx = 0; inviteIdx < numInvites; inviteIdx++) {
           this.addAction(journey, "invite_sent", this.addMinutes(inviteTime, inviteIdx * 2), {
             loop: selectedLoop,
             channel: this.selectChannel(),
             loopOpenRate: loopMetrics.openRate,
             loopConversionRate: loopMetrics.conversionRate,
+            // Add personalized copy from copy-kit
+            copy: inviteCopy,
           });
           journey.invitesSent++;
         }
@@ -482,6 +494,53 @@ export class BehaviorEngine {
       if (rand < cumulative) return channels[i];
     }
     return channels[0];
+  }
+
+  /**
+   * Generate personalized copy for an invite using copy-kit
+   */
+  private generateInviteCopy(loop: string, persona: string, user: SyntheticUser): any {
+    try {
+      // Normalize loop name for copy-kit (buddy_challenge -> buddy-challenge)
+      const normalizedLoop = loop.replace(/_/g, "-") as ViralLoop;
+      
+      // Build context data
+      const contextData: any = {
+        subject: user.subject || "this subject",
+        score: Math.floor(Math.random() * 3) + 8, // Random score 8-10
+        studentName: user.name,
+        milestone: "Level " + Math.floor(Math.random() * 5 + 1),
+        wins: ["improved scores", "5 lessons completed"],
+        studentCount: Math.floor(Math.random() * 20 + 5),
+      };
+
+      // Get personalized copy from copy-kit
+      const copy = copyKit.getPersonalizedCopy(
+        {
+          loop: normalizedLoop,
+          persona: persona as Persona,
+          tone: copyKit.determineTone(persona as Persona, contextData),
+        },
+        contextData
+      );
+
+      return {
+        headline: copy.headline,
+        body: copy.body,
+        cta: copy.cta,
+        tone: copy.metadata.tone,
+        version: copy.metadata.version,
+      };
+    } catch (error) {
+      // Fallback if copy-kit fails
+      return {
+        headline: "Join me on Varsity Tutors!",
+        body: "Let's learn together",
+        cta: "Get Started",
+        tone: "friendly",
+        version: "fallback",
+      };
+    }
   }
 
   /**

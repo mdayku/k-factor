@@ -4,6 +4,10 @@
  * tutor advocacy, trust & safety, and experimentation
  */
 
+// Load environment variables from .env file
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import bodyParser from "body-parser";
 import { handleOrchestratorRequest, incrementThrottle } from "./agents/orchestrator.js";
@@ -13,6 +17,8 @@ import { handleSocialPresenceRequest } from "./agents/social-presence.js";
 import { handleTutorAdvocacyRequest } from "./agents/tutor-advocacy.js";
 import { handleTrustSafetyRequest, registerDevice, registerEmail, registerIP, incrementInviteCount } from "./agents/trust-safety.js";
 import { handleExperimentationRequest, recordMetric, getExperimentStats } from "./agents/experimentation.js";
+import copyKitRouter from "./routes/copy-kit.js";
+import aiTestRouter from "./routes/ai-test.js";
 
 const app = express();
 app.use(bodyParser.json());
@@ -23,6 +29,18 @@ app.use((req, res, next) => {
   res.header("Access-Control-Allow-Headers", "Content-Type");
   next();
 });
+
+// ============================================================================
+// COPY KIT API
+// ============================================================================
+
+app.use("/copy-kit", copyKitRouter);
+
+// ============================================================================
+// AI TESTING & DIAGNOSTICS
+// ============================================================================
+
+app.use("/ai", aiTestRouter);
 
 // ============================================================================
 // MCP AGENT ENDPOINTS
@@ -54,6 +72,16 @@ app.post("/mcp/personalization", async (req, res) => {
     };
     
     const response = await handlePersonalizationRequest(request as any);
+    res.json(response);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Alias for web app compatibility
+app.post("/agents/personalization", async (req, res) => {
+  try {
+    const response = await handlePersonalizationRequest(req.body as any);
     res.json(response);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -333,14 +361,18 @@ const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, () => {
   console.log(`🚀 Agents Service listening on :${PORT}`);
+  console.log(`🤖 AI-Powered: OpenAI ${process.env.OPENAI_API_KEY ? '✅' : '❌ (using templates)'}`);
   console.log(`📊 Available agents:`);
+  console.log(`   - /mcp/personalization (AI-powered copy generation)`);
+  console.log(`   - /agents/personalization (alias for web app)`);
   console.log(`   - /mcp/orchestrator`);
-  console.log(`   - /mcp/personalization`);
   console.log(`   - /mcp/incentives`);
   console.log(`   - /mcp/social-presence`);
   console.log(`   - /mcp/tutor-advocacy`);
   console.log(`   - /mcp/trust-safety`);
   console.log(`   - /mcp/experimentation`);
+  console.log(`📝 Copy Kit: /copy-kit/template, /copy-kit/templates`);
+  console.log(`🧪 AI Testing: /ai/test, POST /ai/test-personalization`);
   console.log(`📈 Metrics: /metrics, /metrics/k-factor`);
   console.log(`💚 Health: /health`);
 });

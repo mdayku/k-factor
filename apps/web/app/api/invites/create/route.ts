@@ -48,6 +48,42 @@ export async function POST(request: NextRequest) {
       .update(data)
       .digest("base64url");
 
+    // Generate AI-powered personalized copy
+    let personalizedCopy = null;
+    try {
+      const agentsUrl = process.env.NEXT_PUBLIC_AGENTS_URL || "http://localhost:4000";
+      const personalizationResponse = await fetch(`${agentsUrl}/agents/personalization`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requestId: `invite_${Date.now()}`,
+          agentName: "personalization",
+          timestamp: new Date().toISOString(),
+          context: {
+            persona: session.user.role || "student",
+            loop: challengeType,
+            userId: session.user.id,
+            contextData: {
+              subject,
+              score,
+              studentName: session.user.name,
+            },
+          },
+        }),
+      });
+
+      if (personalizationResponse.ok) {
+        const result = await personalizationResponse.json();
+        personalizedCopy = {
+          ...result.decision.copy,
+          tone: result.decision.tone,
+          aiGenerated: result.decision.aiGenerated || false,
+        };
+      }
+    } catch (error) {
+      console.warn("Failed to generate AI copy, using defaults:", error);
+    }
+
     // Create signed link record
     const signedLink = await prisma.signedLink.create({
       data: {
@@ -65,6 +101,13 @@ export async function POST(request: NextRequest) {
           referrerScore: score,
           recipientEmail,
           surface: "results-page",
+          // Store AI-generated copy for the invite
+          copy: personalizedCopy || {
+            headline: `Can you beat my ${subject} score?`,
+            body: `I just scored ${score}/10! Think you can do better?`,
+            cta: "Accept Challenge",
+            aiGenerated: false,
+          },
         },
       },
     });

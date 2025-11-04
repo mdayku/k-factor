@@ -45,6 +45,7 @@ jobs:
         run: |
           pnpm --filter event-schema run build || true
           pnpm --filter mcp-protocol run build || true
+          pnpm --filter copy-kit run build || true
           pnpm --filter sdk run build || true
           pnpm --filter simulation run build || true
 
@@ -136,6 +137,7 @@ jobs:
         run: |
           pnpm --filter event-schema run build || echo "No build script"
           pnpm --filter mcp-protocol run build || echo "No build script"
+          pnpm --filter copy-kit run build || echo "No build script"
           pnpm --filter sdk run build || echo "No build script"
           pnpm --filter simulation run build || echo "No build script"
 
@@ -211,6 +213,7 @@ jobs:
         run: |
           pnpm --filter event-schema run build
           pnpm --filter mcp-protocol run build
+          pnpm --filter copy-kit run build
           pnpm --filter simulation run build
 
       - name: Build agents service

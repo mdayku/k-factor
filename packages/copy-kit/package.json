@@ -1,0 +1,19 @@
+{
+  "name": "copy-kit",
+  "version": "0.1.0",
+  "description": "Dynamic copy templates for all viral loops by persona and tone",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "keywords": ["copy", "templates", "personalization", "viral-loops"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^22.0.0"
+  }
+}
+

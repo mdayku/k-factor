@@ -80,6 +80,7 @@ export const PersonalizationResponse = MCPResponse.extend({
     tone: z.enum(["friendly", "motivational", "professional", "playful"]),
     urgency: z.enum(["low", "medium", "high"]),
     personalizationTags: z.array(z.string()),
+    aiGenerated: z.boolean().optional(), // Flag indicating if copy was AI-generated
   }),
 });
 

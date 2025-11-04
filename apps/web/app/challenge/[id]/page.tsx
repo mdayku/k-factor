@@ -25,6 +25,12 @@ interface ChallengeData {
   subject: string;
   skill: string;
   questions: Question[];
+  copy?: {
+    headline: string;
+    body: string;
+    cta: string;
+    aiGenerated?: boolean;
+  };
 }
 
 export default function ChallengePage() {
@@ -55,6 +61,7 @@ export default function ChallengePage() {
             referrerScore: data.metadata?.referrerScore || 85,
             subject: data.context || data.metadata?.subject || "Algebra",
             skill: "Practice Questions",
+            copy: data.metadata?.copy || undefined, // AI-generated copy
             questions: [
               {
                 id: "1",
@@ -370,7 +377,7 @@ export default function ChallengePage() {
             marginBottom: "16px",
             color: "#1f2937"
           }}>
-            Challenge from {challenge.referrerName}!
+            {challenge.copy?.headline || `Challenge from ${challenge.referrerName}!`}
           </h1>
 
           <p style={{
@@ -378,9 +385,20 @@ export default function ChallengePage() {
             color: "#6b7280",
             marginBottom: "32px"
           }}>
-            {challenge.referrerName} scored <strong>{challenge.referrerScore}%</strong> on{" "}
-            {challenge.subject}. Think you can beat that?
+            {challenge.copy?.body || `${challenge.referrerName} scored ${challenge.referrerScore}% on ${challenge.subject}. Think you can beat that?`}
           </p>
+          
+          {challenge.copy?.aiGenerated && (
+            <p style={{
+              fontSize: "12px",
+              color: "#9ca3af",
+              marginTop: "-16px",
+              marginBottom: "16px",
+              fontStyle: "italic"
+            }}>
+              ✨ Personalized by AI
+            </p>
+          )}
 
           <div style={{
             background: "#f9fafb",
@@ -419,7 +437,7 @@ export default function ChallengePage() {
               boxShadow: "0 4px 12px rgba(0,112,243,0.3)"
             }}
           >
-            Start Challenge
+            {challenge.copy?.cta || "Start Challenge"}
           </button>
 
           <p style={{

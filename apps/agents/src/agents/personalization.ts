@@ -1,159 +1,189 @@
 /**
  * Personalization Agent
  * Tailors invites, rewards, and copy by persona, subject, and intent
+ * 
+ * Now powered by OpenAI GPT-4o-mini for dynamic, contextual copy generation
+ * Falls back to Copy Kit templates if AI unavailable
  */
 
 import type { PersonalizationRequest, PersonalizationResponse } from "mcp-protocol";
-
-const COPY_TEMPLATES = {
-  buddy_challenge: {
-    student: {
-      friendly: {
-        headline: "Think you can beat my {subject} score?",
-        body: "I just scored {score}/10 on {subject}. Take the challenge and let's see who's better! 🎯",
-        cta: "Accept Challenge",
-      },
-      motivational: {
-        headline: "Level up together in {subject}!",
-        body: "I'm crushing {subject} right now. Join me and we both get streak shields! 💪",
-        cta: "Let's Do This",
-      },
-    },
-    parent: {
-      professional: {
-        headline: "Your child's {subject} progress",
-        body: "See how your student is improving in {subject}. Join to track their learning journey.",
-        cta: "View Progress",
-      },
-    },
-  },
-  streak_rescue: {
-    student: {
-      friendly: {
-        headline: "Help! My streak is at risk! 😱",
-        body: "Quick practice session in {subject}? If you join, we both save our streaks!",
-        cta: "Save Our Streaks",
-      },
-      playful: {
-        headline: "Streak SOS! 🆘",
-        body: "Need a practice buddy ASAP for {subject}. Join me and we'll both get streak shields!",
-        cta: "Rescue Mission",
-      },
-    },
-  },
-  proud_parent: {
-    parent: {
-      professional: {
-        headline: "Your child achieved {milestone} in {subject}",
-        body: "Weekly progress: {wins}. Invite another parent to get a free class pass.",
-        cta: "Share Progress",
-      },
-      friendly: {
-        headline: "{student} is crushing it! 🌟",
-        body: "This week: {wins}. Know another parent? Share this and both get a class pass!",
-        cta: "Invite a Parent",
-      },
-    },
-  },
-  tutor_spotlight: {
-    tutor: {
-      professional: {
-        headline: "Share your teaching success",
-        body: "You've helped {count} students improve in {subject}. Share your profile and earn XP!",
-        cta: "Share My Profile",
-      },
-    },
-  },
-};
+import { copyKit } from "copy-kit";
+import type { ViralLoop, Persona } from "copy-kit";
+import { generateCompletion, parseAIJsonResponse, isAIAvailable, checkAIRateLimit } from "../lib/ai.js";
 
 export async function handlePersonalizationRequest(
   request: PersonalizationRequest
 ): Promise<PersonalizationResponse> {
   const startTime = Date.now();
-  const { persona, loop, contextData } = request.context as any;
+  const { persona, loop, contextData, userId } = request.context as any;
+
+  // Normalize loop name (convert underscore to hyphen format)
+  const normalizedLoop = loop.replace(/_/g, "-") as ViralLoop;
 
   // Select tone based on context and persona
-  const tone = determineTone(persona, contextData);
-
-  // Get copy template
-  const copyTemplate = getCopyTemplate(loop, persona, tone);
-
-  // Personalize with context data
-  const personalizedCopy = personalizeCopy(copyTemplate, contextData);
+  const tone = copyKit.determineTone(persona as Persona, contextData);
 
   // Determine urgency
   const urgency = determineUrgency(loop, contextData);
+
+  let personalizedCopy: any;
+  let copySource = "copy-kit";
+  let aiGenerated = false;
+
+  // Try AI-generated copy first if available
+  if (isAIAvailable() && userId && checkAIRateLimit(userId, 10)) {
+    try {
+      personalizedCopy = await generateAICopy({
+        persona,
+        loop: normalizedLoop,
+        tone,
+        contextData,
+      });
+      copySource = "openai-gpt4o-mini";
+      aiGenerated = true;
+    } catch (error: any) {
+      console.warn("AI copy generation failed, falling back to templates:", error.message);
+      // Fall through to copy-kit fallback
+    }
+  }
+
+  // Fallback to Copy Kit templates if AI not available or failed
+  if (!personalizedCopy) {
+    const copyKitResult = copyKit.getPersonalizedCopy(
+      {
+        loop: normalizedLoop,
+        persona: persona as Persona,
+        tone,
+      },
+      contextData
+    );
+    personalizedCopy = {
+      headline: copyKitResult.headline,
+      body: copyKitResult.body,
+      cta: copyKitResult.cta,
+    };
+  }
 
   const latencyMs = Date.now() - startTime;
 
   return {
     decision: {
-      copy: personalizedCopy,
+      copy: {
+        headline: personalizedCopy.headline,
+        body: personalizedCopy.body,
+        cta: personalizedCopy.cta,
+      },
       tone,
       urgency,
       personalizationTags: extractPersonalizationTags(contextData),
+      aiGenerated, // Flag indicating if AI was used
     },
-    rationale: `Selected ${tone} tone for ${persona} persona on ${loop} loop. Context includes: ${Object.keys(contextData).join(", ")}`,
-    featuresUsed: ["persona", "loop", "subject", "intent", "previousEngagement"],
-    confidence: 0.85,
+    rationale: aiGenerated 
+      ? `Generated dynamic copy via OpenAI GPT-4o-mini for ${persona} persona on ${loop} loop. Tone: ${tone}. Context: ${Object.keys(contextData).join(", ")}`
+      : `Selected ${tone} tone for ${persona} persona on ${loop} loop (via Copy Kit fallback). Context includes: ${Object.keys(contextData).join(", ")}`,
+    featuresUsed: aiGenerated 
+      ? ["persona", "loop", "subject", "intent", "previousEngagement", "openai", "dynamic-generation"]
+      : ["persona", "loop", "subject", "intent", "previousEngagement", "copyKit"],
+    confidence: aiGenerated ? 0.92 : 0.85,
     latencyMs,
-    version: "v1.0",
+    version: "v2.0-ai",
     timestamp: new Date().toISOString(),
     requestId: request.requestId,
   };
 }
 
-function determineTone(
-  persona: string,
-  contextData: any
-): "friendly" | "motivational" | "professional" | "playful" {
-  if (persona === "parent") return "professional";
-  if (persona === "tutor") return "professional";
-  
-  // For students, vary based on intent
-  if (contextData.intent === "exam_prep") return "motivational";
-  if (contextData.previousEngagement?.includes("playful")) return "playful";
-  
-  return "friendly";
+/**
+ * Generate personalized copy using OpenAI GPT-4o-mini
+ */
+async function generateAICopy(params: {
+  persona: string;
+  loop: ViralLoop;
+  tone: string;
+  contextData: any;
+}): Promise<{ headline: string; body: string; cta: string }> {
+  const { persona, loop, tone, contextData } = params;
+
+  // Build context string
+  const contextString = Object.entries(contextData)
+    .filter(([_, value]) => value !== undefined && value !== null)
+    .map(([key, value]) => `- ${key}: ${Array.isArray(value) ? value.join(", ") : value}`)
+    .join("\n");
+
+  const toneGuidance = getToneGuidance(tone, loop);
+
+  const prompt = `You are an expert growth copywriter for an education platform. Generate a personalized invite message that will maximize conversion while feeling authentic and helpful.
+
+Context:
+- Persona: ${persona} (${persona === "student" ? "ages 10-18, casual tone" : persona === "parent" ? "caring, wants best for child" : "professional educator"})
+- Loop type: ${loop} (${getLoopDescription(loop)})
+- Tone: ${tone}
+${contextString}
+
+${toneGuidance}
+
+Generate a JSON response with exactly these fields:
+{
+  "headline": "Short, attention-grabbing (40-60 chars max)",
+  "body": "Personal, compelling message (120-160 chars max)",
+  "cta": "Action-oriented button text (15-20 chars max)"
 }
 
-function getCopyTemplate(loop: string, persona: string, tone: string): any {
-  const templates = COPY_TEMPLATES[loop as keyof typeof COPY_TEMPLATES] || COPY_TEMPLATES.buddy_challenge;
-  const personaTemplates = templates[persona as keyof typeof templates] || 
-                           (templates as any).student || 
-                           (templates as any).parent || 
-                           Object.values(templates)[0];
-  const toneTemplate = (personaTemplates as any)[tone] || 
-                       (personaTemplates as any).friendly || 
-                       Object.values(personaTemplates)[0];
-  
-  return toneTemplate || {
-    headline: "Join me on Varsity Tutors!",
-    body: "Let's learn together",
-    cta: "Get Started",
+Requirements:
+- Use natural, conversational language
+- Include relevant context (subject, score, etc.) naturally
+- Make it feel personal, not generic
+- ${loop === "streak-rescue" ? "Create urgency but stay playful" : "Be encouraging and positive"}
+- ${persona === "parent" ? "NO emojis" : "Use 1-2 relevant emojis"}
+- Keep within character limits (this is crucial for UI)`;
+
+  const response = await generateCompletion(
+    [
+      { role: "system", content: "You are a growth copywriting expert specializing in education platforms. You create messages that convert while maintaining authenticity." },
+      { role: "user", content: prompt },
+    ],
+    {
+      model: "fast", // GPT-4o-mini
+      temperature: 0.8, // Higher for creativity
+      responseFormat: "json",
+    }
+  );
+
+  const copy = parseAIJsonResponse<{ headline: string; body: string; cta: string }>(response);
+
+  // Validate and trim if needed
+  return {
+    headline: copy.headline.substring(0, 60),
+    body: copy.body.substring(0, 160),
+    cta: copy.cta.substring(0, 20),
   };
 }
 
-function personalizeCopy(template: any, contextData: any): any {
-  let { headline, body, cta } = template;
-
-  // Replace placeholders
-  const replacements: Record<string, string> = {
-    "{subject}": contextData.subject || "this subject",
-    "{score}": contextData.score?.toString() || "10",
-    "{milestone}": contextData.milestone || "great progress",
-    "{student}": contextData.studentName || "Your student",
-    "{wins}": contextData.wins?.join(", ") || "improved scores",
-    "{count}": contextData.studentCount?.toString() || "many",
+/**
+ * Get tone-specific guidance for the AI
+ */
+function getToneGuidance(tone: string, loop: string): string {
+  const guidance = {
+    friendly: "Be warm and casual, like talking to a friend. Use 'you' and 'we'.",
+    motivational: "Be energizing and inspiring. Focus on achievement and progress.",
+    professional: "Be respectful and informative. Avoid slang or emojis.",
+    playful: "Be fun and lighthearted. Use wordplay if appropriate.",
   };
 
-  for (const [placeholder, value] of Object.entries(replacements)) {
-    headline = headline.replace(new RegExp(placeholder, "g"), value);
-    body = body.replace(new RegExp(placeholder, "g"), value);
-    cta = cta.replace(new RegExp(placeholder, "g"), value);
-  }
+  return guidance[tone as keyof typeof guidance] || guidance.friendly;
+}
 
-  return { headline, body, cta };
+/**
+ * Get description of what each loop does (for AI context)
+ */
+function getLoopDescription(loop: string): string {
+  const descriptions = {
+    "buddy-challenge": "Invite friend to beat your score in a friendly competition",
+    "streak-rescue": "Urgent: Help friend save their learning streak before it breaks",
+    "proud-parent": "Share child's progress and achievements with other parents",
+    "tutor-spotlight": "Share teaching success and invite families to try lessons",
+  };
+
+  return descriptions[loop as keyof typeof descriptions] || "Share learning experience";
 }
 
 function determineUrgency(loop: string, contextData: any): "low" | "medium" | "high" {
