@@ -11,8 +11,10 @@ A comprehensive **10x K-Factor** growth system for Varsity Tutors with viral mec
 **Phase 2 Complete**: Simulation engine with synthetic data generation  
 **Phase 3 Complete**: Database deployment (Supabase), seeding, 6 API endpoints  
 **Phase 3.5 Complete**: Authentication system (NextAuth.js), COPPA compliance, legal pages  
-**Phase 4 ~75% Complete**: Results pages, share cards, FVM landing, presence layer, simulator updated  
-**Next**: Test all features, tune K-factor to 0.8/1.2, comprehensive QA
+**Phase 4 ~75% Complete**: Results pages, share cards, FVM landing, presence layer, multi-session invite system  
+**Latest**: Multi-session invite mechanics with corrected K-factor calculation (seed users vs referred users), Gaussian variance, full funnel attribution  
+**Current K-Factor**: Control K=0.153 (target: 0.8), Treatment K=0.702 (target: 1.2), Lift: +360%  
+**Next**: Fine-tune control group, add loop contribution visualization, comprehensive QA
 
 See [PRD.md](./PRD.md) for complete requirements and roadmap.
 
@@ -21,13 +23,15 @@ See [PRD.md](./PRD.md) for complete requirements and roadmap.
 **This is a bootcamp project - all metrics are demonstrated through synthetic data simulation (no real users).**
 
 The system includes:
-- **Synthetic User Generator** - 1,000+ realistic profiles (students, parents, tutors)
-- **Behavior Simulation Engine** - User journeys with realistic conversion rates
-- **Event Stream Generator** - 14-day cohort with proper event timing
-- **Cohort Simulator** - Control (K = 0.8) vs Treatment (K ≥ 1.20)
-- **Metrics Dashboard** - Live K-factor, funnels, cohort comparisons
+- **Synthetic User Generator** - 1,200 synthetic users (600 control + 600 treatment seed users)
+- **Behavior Simulation Engine** - Multi-session user journeys with probabilistic invite opportunities (5-10 sessions per user, 2-4 invites per activation)
+- **Event Stream Generator** - 14-day cohort with proper event timing and Gaussian variance (Box-Muller transform)
+- **Cohort Simulator** - Control vs Treatment A/B test with loop-specific metrics
+- **K-Factor Calculator** - Industry-standard formula: K = (referred users) / (seed users)
+- **Metrics Dashboard** - Live K-factor, weighted loop breakdown, funnels, cohort comparisons
 
-**Target:** Demonstrate K ≥ 1.20, +20% FVM lift, retention metrics, fraud detection, and COPPA compliance through simulation.
+**Current Results:** Overall K=0.559 (Control: 0.153, Treatment: 0.702, Lift: +360%)  
+**Target:** Demonstrate K = 0.8 (control) / 1.2 (treatment), +20% FVM lift, retention metrics, fraud detection, and COPPA compliance through simulation.
 
 ## 🏗 Architecture
 

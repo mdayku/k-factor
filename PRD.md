@@ -1,11 +1,12 @@
 # PRD — 10x K-Factor (Production Roadmap)
 
-## 🎯 Current Status: **Phase 4 UI Complete! Testing & Tuning 🎯**
+## 🎯 Current Status: **Phase 4 UI Complete! K-Factor System Enhanced 🎯**
 
-**All 7 MCP agents** | **Simulation engine live** | **Database deployed (Supabase)** | **1,100+ users seeded** | **18,000+ events** | **6 API endpoints** | **✅ Metrics Dashboard Live** | **✅ Auth System Live** | **✅ Results-Page Share Packs** | **✅ Presence Layer**
+**All 7 MCP agents** | **Simulation engine live** | **Database deployed (Supabase)** | **1,200+ users seeded** | **21,000+ events** | **6 API endpoints** | **✅ Metrics Dashboard Live** | **✅ Auth System Live** | **✅ Results-Page Share Packs** | **✅ Presence Layer** | **✅ Multi-Session Invite System**
 
-**Latest Milestone:** Results pages with share cards (3 variants), Challenge CTAs (4 types), FVM landing page, Presence/Leaderboards/Cohort Rooms, Simulator updated with Phase 4 events  
-**Next Critical:** Test all viral surfaces, tune simulator for K=0.8-1.2, comprehensive QA
+**Latest Milestone:** Multi-session invite system implemented with realistic K-factor mechanics (2-4 invites per activation across 5-10 sessions), corrected K-factor calculation (seed users vs referred users), full funnel attribution tracking, Gaussian variance for Monte Carlo realism  
+**Current K-Factor Results:** Control K=0.153 (target: 0.8), Treatment K=0.702 (target: 1.2), Lift: +360%  
+**Next Critical:** Fine-tune control group parameters, add loop contribution visualization to dashboard, comprehensive QA
 
 ---
 
@@ -18,18 +19,21 @@ Ship a production-ready **growth spine** that increases K-factor to ≥1.20 via 
 
 The system will include:
 - **Synthetic User Generator** - Creates realistic user profiles (students, parents, tutors) with appropriate demographics
-- **Behavior Simulation Engine** - Simulates user actions (sessions, invites, conversions, FVM completion)
+- **Behavior Simulation Engine** - Simulates user actions across multiple sessions with probabilistic invite opportunities
 - **Event Stream Generator** - Produces realistic event streams with proper timing and distribution
 - **Cohort Simulator** - Simulates control vs. treatment groups for A/B experiments
-- **K-Factor Calculator** - Computes real metrics from simulated data to demonstrate K ≥ 1.20
+- **K-Factor Calculator** - Computes metrics using industry-standard formula: K = (referred users) / (seed users)
 
 **Simulation Parameters:**
-- 1,000+ synthetic users across all personas
+- 1,200 synthetic users (600 control + 600 treatment seed users)
 - 14-day cohort simulation with realistic time distribution
-- Configurable conversion rates and viral coefficients
+- **Multi-session invite opportunities:** Users have 5-10 sessions, each with probability of sending invites
+- **Realistic invite counts:** 2-4 invites per activation (not massive bursts)
+- **Gaussian variance:** Monte Carlo realism with Box-Muller transform for conversion rates
+- **Loop-specific metrics:** Each viral loop has distinct open rates, conversion rates, and variances
 - Fraud injection (5-10 cases) to demonstrate Trust & Safety agent
 - COPPA violations (minors without consent) to test compliance
-- Baseline K = 0.8, target treatment K ≥ 1.20
+- Current results: Control K = 0.153, Treatment K = 0.702 (tuning toward targets: 0.8 / 1.2)
 
 ## Core Requirements
 
@@ -243,10 +247,14 @@ Diagnostics, practice tests, flashcards produce results pages that:
   - ✅ Friendship networks and cohort assignment
 
 - ✅ **Behavior Simulation Engine** [`packages/simulation/src/behavior-engine.ts`]
-  - ✅ User journey simulation (session → results → invite → join → FVM)
-  - ✅ Realistic timing distributions with variance
-  - ✅ Conversion rate modeling: Control (K=0.8) vs Treatment (K≥1.20)
+  - ✅ User journey simulation with multi-session invite opportunities
+  - ✅ Realistic timing distributions with Gaussian variance (Box-Muller transform)
+  - ✅ Probabilistic invite sending (65% control, 78% treatment per session)
+  - ✅ Realistic invite counts (2-4 per activation across 5-10 sessions)
+  - ✅ Loop-specific open rates, conversion rates, and variances
+  - ✅ Conversion rate modeling: Control (K=0.8 target) vs Treatment (K≥1.20 target)
   - ✅ Retention curves (D1, D7, D28) with cohort-specific rates
+  - ✅ Current results: Control K=0.153, Treatment K=0.702 (+360% lift)
 
 - ✅ **Event Stream Generator** [`packages/simulation/src/event-generator.ts`]
   - ✅ Generate all 25+ event types with proper context
@@ -376,9 +384,13 @@ Diagnostics, practice tests, flashcards produce results pages that:
     - Real-time updates via WebSocket or polling
   - **K-Factor Tracking**
     - Live K-factor calculation from invite events
+    - **Industry-standard formula:** K = (referred users) / (seed users)
+    - **Seed users:** Initial cohort (not referred by anyone) - baseline population
+    - **Referred users:** New users acquired through invites (tracked via Attribution table)
     - **Weighted K-factor by loop usage:** Each viral loop (Buddy Challenge, Streak Rescue, Study Buddy, Tutor Spotlight) contributes proportionally to how often it's used, not by hardcoded assumptions
     - Formula: K_weighted = Σ(K_loop × weight_loop) where weight_loop = invites_loop / total_invites
     - Per-loop breakdown showing invites sent, conversions, conversion rate, and individual K-factor
+    - Current results: Overall K=0.559 (Control K=0.153, Treatment K=0.702, Lift: +360%)
     - ⏳ **Loop Contribution Visualization (Treatment Group):** Bar/pie chart showing how much each loop contributed to the final K-factor (weight × K-factor per loop) - helps identify which loops are driving growth
     - Funnel visualization: invite → open → signup → FVM
     - Historical trends and current rate
