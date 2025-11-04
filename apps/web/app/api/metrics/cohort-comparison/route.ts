@@ -3,6 +3,9 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -39,15 +42,57 @@ export async function GET(request: NextRequest) {
         }).then(users => users.length),
         prisma.event.count({ where: { ...cohortWhere, type: 'fvm.reached' } }),
         prisma.event.count({ where: { ...cohortWhere, type: 'invite.sent' } }),
-        prisma.event.count({ where: { ...cohortWhere, type: 'invite.accepted' } }),
+        // Count conversions from invites (users who signed up via referral)
+        prisma.event.count({
+          where: {
+            ...cohortWhere,
+            type: 'account.created',
+            AND: [{
+              metadata: {
+                path: ['referrerSignedLinkId'],
+                not: null
+              }
+            }]
+          }
+        }),
         prisma.event.count({ where: { ...cohortWhere, type: 'account.created' } })
       ]);
 
+      // Count seed users (not referred) for proper K-factor calculation
+      // First get all userIds for this cohort from account.created events
+      const cohortUsers = await prisma.event.findMany({
+        where: {
+          ...baseWhere,
+          type: 'account.created',
+          metadata: {
+            path: ['cohort'],
+            equals: cohort
+          }
+        },
+        select: { userId: true },
+        distinct: ['userId']
+      });
+
+      // Filter out null userIds and then count how many are NOT referred
+      const userIds = cohortUsers.map(u => u.userId).filter((id): id is string => id !== null);
+      const seedUsers = await prisma.user.count({
+        where: {
+          id: { in: userIds },
+          NOT: {
+            receivedInvites: {
+              some: {}
+            }
+          }
+        }
+      });
+
       // Calculate metrics
       const fvmRate = accountsCreated > 0 ? (fvmReached / accountsCreated) * 100 : 0;
-      const invitesPerUser = totalUsers > 0 ? invitesSent / totalUsers : 0;
+      const invitesPerUser = seedUsers > 0 ? invitesSent / seedUsers : 0;
       const conversionRate = invitesSent > 0 ? (invitesAccepted / invitesSent) * 100 : 0;
-      const kFactor = (invitesPerUser) * (invitesAccepted / (invitesSent || 1));
+      
+      // K-factor = referred users / seed users = invitesAccepted / seedUsers
+      const kFactor = seedUsers > 0 ? invitesAccepted / seedUsers : 0;
 
       // Get retention metrics (simplified - using all events)
       const activeUsersD1 = await prisma.event.findMany({
@@ -77,15 +122,19 @@ export async function GET(request: NextRequest) {
       const d1Retention = totalUsers > 0 ? (activeUsersD1 / totalUsers) * 100 : 0;
       const d7Retention = totalUsers > 0 ? (activeUsersD7 / totalUsers) * 100 : 0;
 
+      const referredUsers = invitesAccepted; // Referred users = conversions from invites
+
       return {
         totalUsers,
+        seedUsers,
+        referredUsers,
         fvmReached,
         fvmRate,
         invitesSent,
         invitesAccepted,
         invitesPerUser,
         conversionRate,
-        kFactor,
+        kFactor, // Now correctly calculated as referred / seed
         retention: {
           d1: d1Retention,
           d7: d7Retention

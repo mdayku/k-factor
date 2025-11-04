@@ -166,8 +166,8 @@ export default function ChallengeCTA({
             </p>
 
             <input
-              type="email"
-              placeholder="Friend's email address"
+              type="text"
+              placeholder="Friend's email address or @username"
               value={friendEmail}
               onChange={(e) => setFriendEmail(e.target.value)}
               style={{

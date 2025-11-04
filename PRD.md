@@ -376,6 +376,10 @@ Diagnostics, practice tests, flashcards produce results pages that:
     - Real-time updates via WebSocket or polling
   - **K-Factor Tracking**
     - Live K-factor calculation from invite events
+    - **Weighted K-factor by loop usage:** Each viral loop (Buddy Challenge, Streak Rescue, Study Buddy, Tutor Spotlight) contributes proportionally to how often it's used, not by hardcoded assumptions
+    - Formula: K_weighted = Σ(K_loop × weight_loop) where weight_loop = invites_loop / total_invites
+    - Per-loop breakdown showing invites sent, conversions, conversion rate, and individual K-factor
+    - ⏳ **Loop Contribution Visualization (Treatment Group):** Bar/pie chart showing how much each loop contributed to the final K-factor (weight × K-factor per loop) - helps identify which loops are driving growth
     - Funnel visualization: invite → open → signup → FVM
     - Historical trends and current rate
     - Success indicator (K ≥ 1.20)
@@ -452,6 +456,13 @@ Diagnostics, practice tests, flashcards produce results pages that:
     - Share card integrated
     - Challenge CTAs prominently featured
     - "What's Next?" section with clear CTAs
+  - ✅ **Funnel Tracking & Attribution** (K-Factor Measurement)
+    - Complete attribution chain: `invite.sent → invite.opened → fvm.reached → account.created → Attribution`
+    - All events link back to `signedLinkId` for funnel analysis
+    - Attribution table tracks referrer → referred user relationships
+    - Challenge page fetches signed link data for proper tracking
+    - Signup captures `ref` parameter and creates attribution records
+    - K-factor calculable from real user data (not just simulation)
 
 - 🔄 **Real-Time Presence Layer (Deliverable #1 completion)** - UI COMPLETE, WebSocket Remaining
   - ⏳ **WebSocket Infrastructure** ⭐ Phase 8
@@ -609,6 +620,37 @@ Diagnostics, practice tests, flashcards produce results pages that:
 - ⏳ Data retention and deletion policies
 - ⏳ GDPR compliance (right to access, right to be forgotten)
 - ⏳ SOC 2 preparation (if required)
+
+### ⏳ Phase 6.5: Production Deployment (Vercel)
+
+**Goal:** Deploy application to Vercel for live demo
+
+**Rationale:** Need production URL for demo, testing with peers, and portfolio
+
+**Deployment Platform:** Vercel (Next.js optimized, free tier available)
+
+**Prerequisites:**
+- ✅ Database deployed (Supabase)
+- ✅ Authentication configured (NextAuth.js)
+- ✅ Environment variables ready
+- ✅ CI/CD pipeline configured (GitHub Actions)
+
+**Steps:**
+1. ⏳ Generate production secrets (`NEXTAUTH_SECRET`, `SIGNED_LINK_SECRET`)
+2. ⏳ Deploy via Vercel CLI or Dashboard
+3. ⏳ Configure environment variables in Vercel
+4. ⏳ Set root directory to `apps/web`
+5. ⏳ Update `NEXTAUTH_URL` to production domain
+6. ⏳ Test authentication flow
+7. ⏳ Test API endpoints
+8. ⏳ Run simulation (optional)
+9. ⏳ Configure custom domain (optional)
+
+**See:** `DEPLOYMENT.md` for detailed step-by-step instructions
+
+**Cost:** Free tier or $20/month (Vercel Pro for commercial use)
+
+---
 
 ### ⏳ Phase 7: Final Deliverables & Demo (Deliverables #6, #7, #9)
 

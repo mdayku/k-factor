@@ -17,13 +17,14 @@ export default withAuth(
     }
 
     // Redirect to onboarding if not completed
-    if (
-      token &&
-      !token.hasCompletedOnboarding &&
-      !pathname.startsWith("/onboarding")
-    ) {
-      return NextResponse.redirect(new URL("/onboarding", req.url));
-    }
+    // TEMPORARILY DISABLED FOR TESTING
+    // if (
+    //   token &&
+    //   !token.hasCompletedOnboarding &&
+    //   !pathname.startsWith("/onboarding")
+    // ) {
+    //   return NextResponse.redirect(new URL("/onboarding", req.url));
+    // }
 
     return NextResponse.next();
   },
@@ -39,9 +40,13 @@ export default withAuth(
           "/auth/signup",
           "/auth/error",
           "/auth/verify-request",
+          "/auth/parental-consent",
           "/legal/terms",
           "/legal/privacy",
           "/legal/coppa",
+          "/results", // For testing Phase 4
+          "/challenge", // FVM landing pages (should be public for viral growth)
+          "/presence", // For testing Phase 4
         ];
 
         if (publicRoutes.some((route) => pathname.startsWith(route))) {

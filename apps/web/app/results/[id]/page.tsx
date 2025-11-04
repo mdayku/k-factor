@@ -96,7 +96,7 @@ export default function ResultsPage() {
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: "40px" }}>
           <div style={{
-            display: "inline-block",
+            display: "flex",
             background: getScoreColor(result.score),
             color: "white",
             fontSize: "72px",
@@ -104,7 +104,6 @@ export default function ResultsPage() {
             width: "160px",
             height: "160px",
             borderRadius: "50%",
-            display: "flex",
             alignItems: "center",
             justifyContent: "center",
             marginBottom: "20px",

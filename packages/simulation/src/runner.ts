@@ -165,8 +165,8 @@ async function main() {
   console.log("  Running 14-day A/B experiment with Control (K=0.8) vs Treatment (K≥1.20).\n");
   
   // Configuration
-  const controlSize = 500;
-  const treatmentSize = 500;
+  const controlSize = 600; // Increased from 500 for better funnel coverage
+  const treatmentSize = 600; // Increased from 500 for better funnel coverage
   const durationDays = 14;
   
   console.log(`  Cohort Sizes: ${controlSize + treatmentSize} total users`);

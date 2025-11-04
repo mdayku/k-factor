@@ -63,22 +63,26 @@
 ---
 
 #### 3. Challenge CTAs (All 4 Types)
-**How:** Click "Challenge a Friend" button on results page
+**URL:** `http://localhost:3000/test-challenges`
 
-**Test:**
-- [ ] Buddy Challenge type displays correctly
+**Test All 4 Types:**
+- [ ] **Buddy Challenge** - 🎯 icon, "Challenge a Friend" title, "Beat your score" description, "Both get Streak Shields" reward
+- [ ] **Streak Rescue** - 🔥 icon, "Phone a Friend" title, streak at risk description, "Both get Streak Shields" reward
+- [ ] **Study Buddy** - 👥 icon, "Invite Study Buddy" title, co-practice description, "Get practice power-ups" reward
+- [ ] **Tutor Spotlight** - ⭐ icon, "Share with Parents" title, progress sharing description, "Earn class pass rewards" reward
+
+**Test Each One:**
+- [ ] Click the challenge button
 - [ ] Email input field works
-- [ ] "Send Challenge" button enabled when email entered
+- [ ] Placeholder shows "Friend's email address or @username"
+- [ ] "Send Challenge" button enabled when text entered
 - [ ] Loading state shows when sending
-- [ ] Success confirmation appears
-- [ ] Reward message displayed
+- [ ] Success confirmation appears (✅ "Challenge Sent!")
+- [ ] Reward message displayed correctly
 
-**Repeat for other challenge types:**
-- [ ] Streak Rescue
-- [ ] Study Buddy
-- [ ] Tutor Spotlight
+**Expected:** Each challenge type shows unique icon, title, description, and reward messaging
 
-**Expected:** Each challenge type shows unique icon, title, description, reward
+**Note:** Currently only accepts email. @username lookup feature coming in Phase 5.
 
 ---
 
@@ -92,6 +96,67 @@
 - [ ] Event logged (`invite.sent`)
 
 **Expected:** API returns signed link with HMAC signature
+
+---
+
+#### 4a. 🎯 Funnel Tracking (Attribution Chain) - CRITICAL FOR K-FACTOR
+**Purpose:** Verify that the full referral funnel is tracked from invite → signup
+
+**Test Flow (End-to-End):**
+1. [ ] Send a challenge (creates `invite.sent` event with `signedLinkId`)
+2. [ ] Copy the `inviteUrl` from the Network tab response
+3. [ ] **Open URL in incognito window** (simulates new user)
+4. [ ] Check Network tab → `invite.opened` event created with `signedLinkId` and `referrerId`
+5. [ ] Complete the 5 questions
+6. [ ] Check Network tab → `fvm.reached` event created with `signedLinkId`
+7. [ ] Click "Sign Up to Continue"
+8. [ ] Verify URL has `?ref=[signedLinkId]` parameter
+9. [ ] Fill out sign-up form and submit
+10. [ ] Check Network tab → `account.created` event has `referrerSignedLinkId` in metadata
+11. [ ] Check database → `Attribution` record links referrer to new user
+
+**Expected Full Chain:**
+```
+invite.sent → invite.opened → fvm.reached → account.created → Attribution
+    ↓              ↓               ↓              ↓                ↓
+(link ID)      (link ID)       (link ID)      (link ID)     (referrer + referred)
+```
+
+**Database Verification:**
+```sql
+-- View full funnel for a specific signed link (replace [YOUR_LINK_ID])
+SELECT 
+  e.type, 
+  e."userId", 
+  e.metadata->>'signedLinkId' as link_id,
+  e.metadata->>'referrerSignedLinkId' as ref_link_id,
+  e.ts
+FROM "Event" e
+WHERE 
+  e.metadata->>'signedLinkId' = '[YOUR_LINK_ID]' OR
+  e.metadata->>'referrerSignedLinkId' = '[YOUR_LINK_ID]'
+ORDER BY e.ts;
+
+-- Check Attribution table
+SELECT 
+  a.*,
+  u1.email as referrer_email,
+  u2.email as referred_email
+FROM "Attribution" a
+JOIN "User" u1 ON a."referrerId" = u1.id
+JOIN "User" u2 ON a."referredUserId" = u2.id
+ORDER BY a."convertedAt" DESC
+LIMIT 5;
+```
+
+**Success Criteria:**
+- [ ] All 4 events link back to same `signedLinkId`
+- [ ] Attribution record created with correct referrer and referred user IDs
+- [ ] Channel is set to "email"
+- [ ] Loop matches challenge type (buddy-challenge, etc.)
+- [ ] K-factor can be calculated: `K = (referred users) / (total active users)`
+
+**Why This Matters:** This is how we measure viral growth! Without proper attribution, we can't calculate K-factor or prove the product's viral mechanics work.
 
 ---
 

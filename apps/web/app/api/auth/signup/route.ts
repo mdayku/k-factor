@@ -17,6 +17,7 @@ const signupSchema = z.object({
   age: z.number().min(5).max(120),
   role: z.enum(["STUDENT", "PARENT", "TUTOR"]),
   parentEmail: z.string().email().optional(),
+  referrerSignedLinkId: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -97,7 +98,29 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Track signup event
+    // If user signed up via referral, create attribution record
+    if (data.referrerSignedLinkId) {
+      try {
+        const signedLink = await prisma.signedLink.findUnique({
+          where: { id: data.referrerSignedLinkId },
+        });
+
+        if (signedLink) {
+          await prisma.attribution.create({
+            data: {
+              signedLinkId: signedLink.id,
+              userId: user.id, // The referred user
+              touchpoint: "signup", // Required field - where conversion happened
+            },
+          });
+        }
+      } catch (error) {
+        console.error("Failed to create attribution:", error);
+        // Continue anyway - don't fail signup if attribution fails
+      }
+    }
+
+    // Track signup event with attribution
     await prisma.event.create({
       data: {
         type: "account.created",
@@ -109,6 +132,7 @@ export async function POST(request: NextRequest) {
           role: data.role,
           isMinor,
           coppaCompliant,
+          referrerSignedLinkId: data.referrerSignedLinkId || null,
         },
       },
     });

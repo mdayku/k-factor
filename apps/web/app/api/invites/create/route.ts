@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../../lib/auth";
+import { authOptions } from "../../../../lib/auth";
 import { PrismaClient } from "@prisma/client";
 import crypto from "crypto";
 
@@ -51,18 +51,21 @@ export async function POST(request: NextRequest) {
     // Create signed link record
     const signedLink = await prisma.signedLink.create({
       data: {
-        code: shortCode,
+        shortCode: shortCode,
         signature,
+        persona: session.user.role || "student",
+        context: subject,
+        loop: challengeType,
         referrerId: session.user.id,
-        resultId,
-        surface: "results-page",
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
         metadata: {
+          resultId,
           challengeType,
           subject,
           referrerScore: score,
           recipientEmail,
+          surface: "results-page",
         },
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
       },
     });
 

@@ -37,65 +37,127 @@ export default function ChallengePage() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [signedLinkId, setSignedLinkId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch challenge data
-    // For now, using mock data
-    const mockChallenge: ChallengeData = {
-      id: challengeId,
-      referrerName: "Alex",
-      referrerScore: 85,
-      subject: "Algebra",
-      skill: "Linear Equations",
-      questions: [
-        {
-          id: "1",
-          text: "Solve for x: 2x + 5 = 13",
-          options: ["x = 4", "x = 8", "x = 3", "x = 6"],
-          correctAnswer: 0,
-        },
-        {
-          id: "2",
-          text: "What is the slope of the line y = 3x + 2?",
-          options: ["2", "3", "5", "1"],
-          correctAnswer: 1,
-        },
-        {
-          id: "3",
-          text: "Simplify: 4(2x - 3)",
-          options: ["8x - 12", "8x - 3", "6x - 12", "8x + 12"],
-          correctAnswer: 0,
-        },
-        {
-          id: "4",
-          text: "If 3x = 15, what is x?",
-          options: ["3", "5", "45", "12"],
-          correctAnswer: 1,
-        },
-        {
-          id: "5",
-          text: "Solve: x/4 = 3",
-          options: ["12", "7", "4/3", "1.33"],
-          correctAnswer: 0,
-        },
-      ],
+    // Fetch signed link data to get proper attribution
+    const fetchSignedLink = async () => {
+      try {
+        const response = await fetch(`/api/signed-link/${challengeId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setSignedLinkId(data.id);
+          
+          // Use real data from signed link
+          const mockChallenge: ChallengeData = {
+            id: challengeId,
+            referrerName: data.referrerName || "A friend",
+            referrerScore: data.metadata?.referrerScore || 85,
+            subject: data.context || data.metadata?.subject || "Algebra",
+            skill: "Practice Questions",
+            questions: [
+              {
+                id: "1",
+                text: "Solve for x: 2x + 5 = 13",
+                options: ["x = 4", "x = 8", "x = 3", "x = 6"],
+                correctAnswer: 0,
+              },
+              {
+                id: "2",
+                text: "What is the slope of the line y = 3x + 2?",
+                options: ["2", "3", "5", "1"],
+                correctAnswer: 1,
+              },
+              {
+                id: "3",
+                text: "Simplify: 4(2x - 3)",
+                options: ["8x - 12", "8x - 3", "6x - 12", "8x + 12"],
+                correctAnswer: 0,
+              },
+              {
+                id: "4",
+                text: "If 3x = 15, what is x?",
+                options: ["3", "5", "45", "12"],
+                correctAnswer: 1,
+              },
+              {
+                id: "5",
+                text: "Solve: x/4 = 3",
+                options: ["12", "7", "4/3", "1.33"],
+                correctAnswer: 0,
+              },
+            ],
+          };
+
+          setChallenge(mockChallenge);
+          setLoading(false);
+
+          // Track invite.opened event with signedLinkId
+          fetch("/api/events", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "invite.opened",
+              metadata: {
+                challengeId,
+                signedLinkId: data.id,
+                referrerId: data.referrerId,
+                surface: "web",
+              },
+            }),
+          });
+        } else {
+          // Fallback to mock data if API fails
+          const mockChallenge: ChallengeData = {
+            id: challengeId,
+            referrerName: "A friend",
+            referrerScore: 85,
+            subject: "Algebra",
+            skill: "Linear Equations",
+            questions: [
+              {
+                id: "1",
+                text: "Solve for x: 2x + 5 = 13",
+                options: ["x = 4", "x = 8", "x = 3", "x = 6"],
+                correctAnswer: 0,
+              },
+              {
+                id: "2",
+                text: "What is the slope of the line y = 3x + 2?",
+                options: ["2", "3", "5", "1"],
+                correctAnswer: 1,
+              },
+              {
+                id: "3",
+                text: "Simplify: 4(2x - 3)",
+                options: ["8x - 12", "8x - 3", "6x - 12", "8x + 12"],
+                correctAnswer: 0,
+              },
+              {
+                id: "4",
+                text: "If 3x = 15, what is x?",
+                options: ["3", "5", "45", "12"],
+                correctAnswer: 1,
+              },
+              {
+                id: "5",
+                text: "Solve: x/4 = 3",
+                options: ["12", "7", "4/3", "1.33"],
+                correctAnswer: 0,
+              },
+            ],
+          };
+          setChallenge(mockChallenge);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("Failed to fetch signed link:", error);
+        // Use fallback mock data
+        setLoading(false);
+      }
     };
 
-    setChallenge(mockChallenge);
-    setLoading(false);
-
-    // Track invite.opened event
-    fetch("/api/events", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: "invite.opened",
-        metadata: {
-          challengeId,
-          surface: "web",
-        },
-      }),
-    });
+    fetchSignedLink();
   }, [challengeId]);
 
   const handleStart = () => {
@@ -115,7 +177,7 @@ export default function ChallengePage() {
       setTimeout(() => {
         setShowResults(true);
         
-        // Track FVM reached
+        // Track FVM reached with attribution
         fetch("/api/events", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -123,6 +185,7 @@ export default function ChallengePage() {
             type: "fvm.reached",
             metadata: {
               challengeId,
+              signedLinkId,
               score: calculateScore(newAnswers),
             },
           }),
@@ -240,7 +303,7 @@ export default function ChallengePage() {
           </div>
 
           <Link
-            href={"/auth/signup" as Route}
+            href={`/auth/signup?ref=${signedLinkId || challengeId}` as Route}
             style={{
               display: "inline-block",
               padding: "16px 32px",

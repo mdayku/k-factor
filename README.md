@@ -140,6 +140,7 @@ NEXTAUTH_SECRET=<generate with: node -e "console.log(require('crypto').randomByt
 - ✅ **Challenge CTAs** - Buddy Challenge, Streak Rescue, Study Buddy, Tutor Spotlight
 - ✅ **FVM Landing Page** (`/challenge/[id]`) - 5-question skill check, pre-start screen, results screen
 - ✅ **Invite API** (`/api/invites/create`) - Signed links with HMAC, 7-day expiry, event tracking
+- ✅ **Funnel Tracking** - Full attribution chain (invite → opened → FVM → signup → Attribution table) for K-factor measurement
 - ⏳ **Image Generation** - Canvas API for share cards (Phase 8)
 - ⏳ **Email/SMS** - SendGrid/Twilio integration (Phase 8)
 

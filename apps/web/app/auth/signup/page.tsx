@@ -5,12 +5,15 @@
  * Registration form with COPPA compliance and age verification
  */
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function SignUpPage() {
+function SignUpForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const referrerSignedLinkId = searchParams.get("ref");
+  
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -62,6 +65,7 @@ export default function SignUpPage() {
           age: parseInt(formData.age),
           role: formData.role,
           parentEmail: isMinor ? formData.parentEmail : undefined,
+          referrerSignedLinkId: referrerSignedLinkId || undefined,
         }),
       });
 
@@ -507,3 +511,19 @@ export default function SignUpPage() {
   );
 }
 
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ 
+        display: "flex", 
+        justifyContent: "center", 
+        alignItems: "center", 
+        minHeight: "100vh" 
+      }}>
+        <p>Loading...</p>
+      </div>
+    }>
+      <SignUpForm />
+    </Suspense>
+  );
+}

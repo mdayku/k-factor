@@ -5,7 +5,8 @@
  * Privacy-safe share cards with student/parent/tutor variants
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 
 interface ShareCardProps {
   resultId: string;
@@ -27,8 +28,19 @@ export default function ShareCard({
   skillsBreakdown,
   onClose,
 }: ShareCardProps) {
-  const [variant, setVariant] = useState<"student" | "parent" | "tutor">("student");
+  const { data: session } = useSession();
+  
+  // Auto-detect variant from user's role, default to student
+  const defaultVariant = (session?.user?.role?.toLowerCase() as "student" | "parent" | "tutor") || "student";
+  const [variant, setVariant] = useState<"student" | "parent" | "tutor">(defaultVariant);
   const [copied, setCopied] = useState(false);
+
+  // Update variant if session loads after component mount
+  useEffect(() => {
+    if (session?.user?.role) {
+      setVariant(session.user.role.toLowerCase() as "student" | "parent" | "tutor");
+    }
+  }, [session]);
 
   const shareUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/challenge/${resultId}`;
 
@@ -92,37 +104,13 @@ export default function ShareCard({
           ✕
         </button>
 
-        <h2 style={{ fontSize: "24px", marginBottom: "24px", color: "#1f2937" }}>
+        <h2 style={{ fontSize: "24px", marginBottom: "8px", color: "#1f2937" }}>
           Share Your Results
         </h2>
-
-        {/* Variant selector */}
-        <div style={{ marginBottom: "24px" }}>
-          <p style={{ fontSize: "14px", color: "#6b7280", marginBottom: "8px" }}>
-            Share as:
-          </p>
-          <div style={{ display: "flex", gap: "8px" }}>
-            {(["student", "parent", "tutor"] as const).map((v) => (
-              <button
-                key={v}
-                onClick={() => setVariant(v)}
-                style={{
-                  padding: "8px 16px",
-                  border: `2px solid ${variant === v ? "#0070f3" : "#e5e7eb"}`,
-                  background: variant === v ? "#eff6ff" : "white",
-                  color: variant === v ? "#0070f3" : "#6b7280",
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  textTransform: "capitalize"
-                }}
-              >
-                {v}
-              </button>
-            ))}
-          </div>
-        </div>
+        
+        <p style={{ fontSize: "14px", color: "#6b7280", marginBottom: "24px" }}>
+          Sharing as: <strong style={{ color: "#0070f3", textTransform: "capitalize" }}>{variant}</strong>
+        </p>
 
         {/* Preview Card */}
         <div style={{
