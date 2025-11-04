@@ -50,10 +50,10 @@ export default function PresenceSignals() {
     const interval = setInterval(() => {
       setActivities(prev => prev.map(activity => ({
         ...activity,
-        count: activity.count + Math.floor(Math.random() * 5) - 2,
+        count: Math.max(0, activity.count + Math.floor(Math.random() * 5) - 2), // Prevent negative
         trend: Math.random() > 0.5 ? "up" : Math.random() > 0.5 ? "down" : "stable"
       })));
-      setTotalOnline(prev => prev + Math.floor(Math.random() * 10) - 5);
+      setTotalOnline(prev => Math.max(0, prev + Math.floor(Math.random() * 10) - 5)); // Prevent negative
     }, 5000);
 
     return () => clearInterval(interval);

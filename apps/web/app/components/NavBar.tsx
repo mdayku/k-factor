@@ -52,7 +52,7 @@ export default function NavBar() {
           gap: "8px",
         }}>
           <span style={{ fontSize: "24px" }}>🎓</span>
-          <span>Varsity Tutors</span>
+          <span>VT K-Factor</span>
         </Link>
 
         {/* Nav Links */}
