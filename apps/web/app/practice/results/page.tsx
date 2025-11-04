@@ -24,6 +24,10 @@ function ResultsContent() {
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [inviteSent, setInviteSent] = useState(false);
   const [recipientEmail, setRecipientEmail] = useState("");
+  const [emailSent, setEmailSent] = useState<boolean>(false);
+  const [emailStatus, setEmailStatus] = useState<string | null>(null);
+  const [selectedLoop, setSelectedLoop] = useState<string | null>(null);
+  const [incentive, setIncentive] = useState<string | null>(null);
 
   // Determine performance level
   const getPerformanceLevel = () => {
@@ -34,6 +38,38 @@ function ResultsContent() {
   };
 
   const performance = getPerformanceLevel();
+
+  // Call orchestrator agent on mount to decide viral loop
+  useEffect(() => {
+    const orchestrate = async () => {
+      if (!session?.user) return;
+      
+      try {
+        const response = await fetch("/api/agents/orchestrate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            surface: "practice_results",
+            score: percentage,
+            sessionCount: 1, // Could track this in localStorage
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setSelectedLoop(data.selectedLoop);
+          setIncentive(data.incentive);
+        }
+      } catch (error) {
+        console.error("Orchestration failed:", error);
+        // Fallback to default
+        setSelectedLoop("buddy_challenge");
+        setIncentive("streak_shield");
+      }
+    };
+
+    orchestrate();
+  }, [session, percentage]);
 
   const handleSendInvite = async () => {
     if (!session?.user || !recipientEmail) return;
@@ -56,6 +92,8 @@ function ResultsContent() {
         const data = await response.json();
         setInviteLink(data.inviteUrl);
         setInviteSent(true);
+        setEmailSent(data.emailSent || false);
+        setEmailStatus(data.message || null);
 
         // Track viral loop trigger
         await fetch("/api/events", {
@@ -68,6 +106,7 @@ function ResultsContent() {
               surface: "practice_results",
               score: percentage,
               subject: "Geography",
+              emailSent: data.emailSent || false,
             },
           }),
         });
@@ -340,10 +379,22 @@ function ResultsContent() {
               <p style={{
                 fontSize: "14px",
                 color: "#166534",
-                marginBottom: "16px"
+                marginBottom: "8px"
               }}>
-                Your friend will receive the challenge link at {recipientEmail}
+                {emailSent 
+                  ? `✉️ Email sent to ${recipientEmail}!` 
+                  : `Link created for ${recipientEmail}`}
               </p>
+              {!emailSent && (
+                <p style={{
+                  fontSize: "12px",
+                  color: "#6b7280",
+                  marginBottom: "16px",
+                  fontStyle: "italic"
+                }}>
+                  (Email not configured - share the link manually)
+                </p>
+              )}
               {inviteLink && (
                 <div style={{
                   padding: "12px",

@@ -200,11 +200,9 @@ export default function Dashboard() {
   const fetchFraudEvents = async () => {
     try {
       const params = new URLSearchParams();
-      if (simulationId) params.append("simulationId", simulationId);
-      params.append("type", "fraud.detected");
       params.append("limit", "50");
       
-      const data = await fetch(`/api/events?${params.toString()}`).then(r => r.json());
+      const data = await fetch(`/api/fraud/events?${params.toString()}`).then(r => r.json());
       setFraudEvents(data);
     } catch (err) {
       console.error("Failed to fetch fraud events:", err);
