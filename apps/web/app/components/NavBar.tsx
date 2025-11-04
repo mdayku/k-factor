@@ -21,8 +21,8 @@ export default function NavBar() {
   const links = [
     { href: "/presence" as Route, label: "🏠 Home", icon: "🏠" },
     { href: "/practice" as Route, label: "📚 Practice", icon: "📚" },
+    { href: "/test-challenges" as Route, label: "⚔️ Challenges", icon: "⚔️" },
     { href: "/dashboard" as Route, label: "📊 Dashboard", icon: "📊" },
-    { href: "/results/list" as Route, label: "🎯 Results", icon: "🎯" },
   ];
 
   return (

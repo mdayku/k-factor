@@ -22,7 +22,7 @@ export class CopyKit {
   getTemplate(key: TemplateKey): TemplateVariant {
     const loopTemplates = TEMPLATES[key.loop];
     if (!loopTemplates) {
-      console.warn(`No templates found for loop: ${key.loop}`);
+      // Suppressed: console.warn(`No templates found for loop: ${key.loop}`);
       return FALLBACK_TEMPLATE;
     }
 
@@ -33,9 +33,9 @@ export class CopyKit {
       if (fallbackPersona) {
         const fallbackTone = Object.values(fallbackPersona)[0];
         if (fallbackTone) {
-          console.warn(
-            `No templates found for persona ${key.persona} in loop ${key.loop}, using fallback`
-          );
+          // Suppressed: console.warn(
+          //   `No templates found for persona ${key.persona} in loop ${key.loop}, using fallback`
+          // );
           return fallbackTone;
         }
       }

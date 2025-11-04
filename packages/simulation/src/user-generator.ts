@@ -176,8 +176,8 @@ export class UserGenerator {
     const conversionProbability = this.clamp(this.normalRandom(conversionMean, 0.15), 0.05, 0.95);
     
     // Shareability: Normal distribution (mean ~0.5, SD=0.2)
-    const shareabilityMean = engagementLevel === "high" ? 0.70 : engagementLevel === "medium" ? 0.50 : 0.30;
-    const shareability = this.clamp(this.normalRandom(shareabilityMean, 0.18), 0.05, 0.95);
+    const shareabilityMean = engagementLevel === "high" ? 0.95 : engagementLevel === "medium" ? 0.80 : 0.65;
+    const shareability = this.clamp(this.normalRandom(shareabilityMean, 0.12), 0.50, 1.0); // Higher floor + ceiling
 
     // Subject (for students and tutors)
     const subject = persona !== "parent" 

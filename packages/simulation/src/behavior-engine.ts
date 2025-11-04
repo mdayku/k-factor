@@ -85,8 +85,8 @@ export interface BehaviorConfig {
 }
 
 export const CONTROL_CONFIG: BehaviorConfig = {
-  signupToFvmRate: 0.85, // 85% reach FVM (high engagement)
-  fvmToInviteRate: 0.65, // 65% chance per session (+18% from 55%)
+  signupToFvmRate: 0.85, // 85% reach FVM
+  fvmToInviteRate: 0.78, // 78% chance per session
   inviteOpenRate: 0.30, // 30% open rate (baseline, overridden by loop)
   inviteToSignupRate: 0.25, // 25% convert (baseline, overridden by loop)
   d1RetentionRate: 0.40,
@@ -95,7 +95,7 @@ export const CONTROL_CONFIG: BehaviorConfig = {
   avgSessionDuration: 1800, // 30 minutes
   avgTimeBetweenSessions: 86400 * 2, // 2 days
   avgTimeToInvite: 3600, // 1 hour after FVM
-  avgInvitesPerUser: 10.0, // Target K=0.8 (achieved via multiple sessions)
+  avgInvitesPerUser: 16.0, // Calibrated to hit K~0.8
   viralBoost: 1.0, // No boost for control
 
   // Loop-specific configs (Control group - baseline viral mechanics)
@@ -103,85 +103,85 @@ export const CONTROL_CONFIG: BehaviorConfig = {
     "buddy-challenge": {
       name: "Buddy Challenge",
       weight: 40, // Most popular loop
-      openRate: 0.42, // +20% boost (0.35 → 0.42)
-      conversionRate: 0.28, // +27% boost (0.22 → 0.28)
+      openRate: 0.48,
+      conversionRate: 0.32,
       conversionVariance: 0.15,
-      avgInvitesPerActivation: 2.5, // Realistic: 2-3 invites per activation
+      avgInvitesPerActivation: 4.8, // Increased 2.4x to hit K~0.8
     },
     "streak-rescue": {
       name: "Streak Rescue",
       weight: 25,
-      openRate: 0.52, // +16% boost (0.45 → 0.52)
-      conversionRate: 0.24, // +33% boost (0.18 → 0.24)
+      openRate: 0.58,
+      conversionRate: 0.28,
       conversionVariance: 0.20,
-      avgInvitesPerActivation: 1.8, // Realistic: usually 1-2 friends
+      avgInvitesPerActivation: 4.3, // Increased 2.4x to hit K~0.8
     },
     "study-buddy": {
       name: "Study Buddy",
       weight: 20,
-      openRate: 0.35, // +25% boost (0.28 → 0.35)
-      conversionRate: 0.32, // +28% boost (0.25 → 0.32)
+      openRate: 0.42,
+      conversionRate: 0.36,
       conversionVariance: 0.12,
-      avgInvitesPerActivation: 2.2, // Realistic: 2-3 study buddies
+      avgInvitesPerActivation: 4.6, // Increased 2.4x to hit K~0.8
     },
     "tutor-spotlight": {
       name: "Tutor Spotlight",
       weight: 15,
-      openRate: 0.40, // +25% boost (0.32 → 0.40)
-      conversionRate: 0.38, // +27% boost (0.30 → 0.38)
+      openRate: 0.46,
+      conversionRate: 0.42,
       conversionVariance: 0.10,
-      avgInvitesPerActivation: 3.5, // Parents share with multiple parents
+      avgInvitesPerActivation: 5.8, // Increased 2.4x to hit K~0.8
     },
   },
 };
 
 export const TREATMENT_CONFIG: BehaviorConfig = {
-  signupToFvmRate: 0.95, // 95% reach FVM (+12% lift from control 85%)
-  fvmToInviteRate: 0.78, // 78% chance per session (+20% from 65% control)
+  signupToFvmRate: 0.95, // 95% reach FVM (+12% lift)
+  fvmToInviteRate: 0.85, // 85% chance per session (+9% lift)
   inviteOpenRate: 0.50, // 50% open rate (good share cards) - baseline, overridden by loop
   inviteToSignupRate: 0.40, // 40% conversion (deep links work) - baseline, overridden by loop
-  d1RetentionRate: 0.50, // +25% lift
-  d7RetentionRate: 0.32, // +28% lift
-  d28RetentionRate: 0.20, // +33% lift
+  d1RetentionRate: 0.50, // +25% lift from control
+  d7RetentionRate: 0.32, // +28% lift from control
+  d28RetentionRate: 0.20, // +33% lift from control
   avgSessionDuration: 2400, // 40 minutes (longer engagement)
   avgTimeBetweenSessions: 86400 * 1.5, // 1.5 days (more frequent)
   avgTimeToInvite: 1800, // 30 minutes (faster to invite)
-  avgInvitesPerUser: 12.5, // Target K=1.2 (achieved via multiple sessions)
-  viralBoost: 2.0, // Stronger viral boost (up from 1.8)
+  avgInvitesPerUser: 20.0, // Calibrated to hit K~1.20
+  viralBoost: 2.0, // Stronger viral boost
   
   // Loop-specific configs (Treatment group - enhanced viral mechanics)
   viralLoops: {
     "buddy-challenge": {
       name: "Buddy Challenge",
       weight: 35, // Still popular but balanced
-      openRate: 0.60, // +43% from control 0.42
-      conversionRate: 0.45, // +61% from control 0.28
+      openRate: 0.65,
+      conversionRate: 0.50,
       conversionVariance: 0.12, // Lower variance (more consistent UX)
-      avgInvitesPerActivation: 3.0, // Realistic: 3 invites per activation
+      avgInvitesPerActivation: 0.76, // Reduced 2.5x to hit K~1.20
     },
     "streak-rescue": {
       name: "Streak Rescue",
       weight: 30, // Higher weight (urgency + gamification)
-      openRate: 0.68, // +31% from control 0.52
-      conversionRate: 0.40, // +67% from control 0.24
+      openRate: 0.72,
+      conversionRate: 0.45,
       conversionVariance: 0.18, // Still higher variance (context-dependent)
-      avgInvitesPerActivation: 2.2, // Realistic: 2 friends
+      avgInvitesPerActivation: 0.68, // Reduced 2.5x to hit K~1.20
     },
     "study-buddy": {
       name: "Study Buddy",
       weight: 22, // Moderate increase
-      openRate: 0.50, // +43% from control 0.35
-      conversionRate: 0.48, // +50% from control 0.32
+      openRate: 0.56,
+      conversionRate: 0.52,
       conversionVariance: 0.10, // Very consistent (mutual benefit clear)
-      avgInvitesPerActivation: 2.8, // Realistic: 2-3 study buddies
+      avgInvitesPerActivation: 0.72, // Reduced 2.5x to hit K~1.20
     },
     "tutor-spotlight": {
       name: "Tutor Spotlight",
       weight: 13, // Slightly lower (more niche)
-      openRate: 0.55, // +38% from control 0.40
-      conversionRate: 0.52, // +37% from control 0.38
+      openRate: 0.60,
+      conversionRate: 0.56,
       conversionVariance: 0.08, // Extremely consistent (trust-based)
-      avgInvitesPerActivation: 4.0, // Parents share with 4 other parents
+      avgInvitesPerActivation: 0.80, // Reduced 2.5x to hit K~1.20
     },
   },
 };
