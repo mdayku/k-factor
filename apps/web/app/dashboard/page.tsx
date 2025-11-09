@@ -526,11 +526,19 @@ export default function Dashboard() {
                           </div>
 
                           <div style={{ fontSize: "12px", display: "flex", justifyContent: "space-between" }}>
-                            <span>Converted ({(loop.conversionRate * 100).toFixed(1)}%)</span>
-                            <span style={{ fontWeight: "600" }}>{loop.conversions}</span>
+                            <span>Account Created ({(loop.conversionRate * 100).toFixed(1)}%)</span>
+                            <span style={{ fontWeight: "600" }}>{loop.accountsCreated}</span>
                           </div>
                           <div style={{ height: "6px", background: "#e0e0e0", borderRadius: "3px", overflow: "hidden" }}>
                             <div style={{ height: "100%", width: `${loop.conversionRate * 100}%`, background: "#00d084" }} />
+                          </div>
+
+                          <div style={{ fontSize: "12px", display: "flex", justifyContent: "space-between" }}>
+                            <span>FVM Reached ({(loop.fvmRate * 100).toFixed(1)}%)</span>
+                            <span style={{ fontWeight: "600" }}>{loop.fvmReached}</span>
+                          </div>
+                          <div style={{ height: "6px", background: "#e0e0e0", borderRadius: "3px", overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: `${loop.fvmRate * 100}%`, background: "#10b981" }} />
                           </div>
                         </div>
 
@@ -591,11 +599,19 @@ export default function Dashboard() {
                           </div>
 
                           <div style={{ fontSize: "12px", display: "flex", justifyContent: "space-between" }}>
-                            <span>Converted ({(loop.conversionRate * 100).toFixed(1)}%)</span>
-                            <span style={{ fontWeight: "600" }}>{loop.conversions}</span>
+                            <span>Account Created ({(loop.conversionRate * 100).toFixed(1)}%)</span>
+                            <span style={{ fontWeight: "600" }}>{loop.accountsCreated}</span>
                           </div>
                           <div style={{ height: "6px", background: "#e0e0e0", borderRadius: "3px", overflow: "hidden" }}>
                             <div style={{ height: "100%", width: `${loop.conversionRate * 100}%`, background: "#999" }} />
+                          </div>
+
+                          <div style={{ fontSize: "12px", display: "flex", justifyContent: "space-between" }}>
+                            <span>FVM Reached ({(loop.fvmRate * 100).toFixed(1)}%)</span>
+                            <span style={{ fontWeight: "600" }}>{loop.fvmReached}</span>
+                          </div>
+                          <div style={{ height: "6px", background: "#e0e0e0", borderRadius: "3px", overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: `${loop.fvmRate * 100}%`, background: "#aaa" }} />
                           </div>
                         </div>
 

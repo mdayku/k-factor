@@ -74,15 +74,16 @@ enum Role {
 
 // User progress tracking for practice mode
 model UserProgress {
-  id          String   @id @default(cuid())
-  userId      String
-  lessonId    String
-  subject     String
-  completed   Boolean  @default(false)
-  score       Float?
-  completedAt DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(cuid())
+  userId         String
+  lessonId       String
+  subject        String
+  completed      Boolean  @default(false)
+  score          Float?
+  totalQuestions Int?
+  completedAt    DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@unique([userId, lessonId])
   @@index([userId])

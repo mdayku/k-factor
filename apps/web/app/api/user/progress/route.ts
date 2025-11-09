@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { lessonId, subject, score } = await request.json();
+    const { lessonId, subject, score, totalQuestions } = await request.json();
 
     if (!lessonId || !subject) {
       return NextResponse.json(
@@ -79,6 +79,7 @@ export async function POST(request: NextRequest) {
       update: {
         completed: true,
         score: score || null,
+        totalQuestions: totalQuestions || null,
         completedAt: new Date(),
         updatedAt: new Date(),
       },
@@ -88,6 +89,7 @@ export async function POST(request: NextRequest) {
         subject,
         completed: true,
         score: score || null,
+        totalQuestions: totalQuestions || null,
       },
     });
 

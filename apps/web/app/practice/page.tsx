@@ -69,9 +69,10 @@ export default function PracticePage() {
           const progressMap: Progress = {};
           data.progress.forEach((item: any) => {
             if (!progressMap[item.subject]) {
-              progressMap[item.subject] = { completed: 0, total: 0, bestScore: 0 };
+              progressMap[item.subject] = { completed: 0, total: item.totalQuestions || 10, bestScore: 0 };
             }
             progressMap[item.subject].completed += 1;
+            progressMap[item.subject].total = item.totalQuestions || progressMap[item.subject].total || 10;
             if (item.score) {
               progressMap[item.subject].bestScore = Math.max(
                 progressMap[item.subject].bestScore,
@@ -161,6 +162,7 @@ export default function PracticePage() {
               lessonId: `geography_${selectedUnit}_${Date.now()}`,
               subject: selectedUnit,
               score: score,
+              totalQuestions: questions.length,
             }),
           });
         } catch (err) {

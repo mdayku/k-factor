@@ -10,74 +10,50 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const userId = searchParams.get('userId');
-    const agentType = searchParams.get('agentType'); // orchestrator, personalization, etc.
-    const simulationId = searchParams.get('simulationId');
+    const agentType = searchParams.get('agentType');
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    // Build where clause
-    const where: any = {
-      type: { startsWith: 'agent.' } // All agent events start with 'agent.'
-    };
+    // Build where clause for AgentDecision table
+    const where: any = {};
     
     if (userId) where.userId = userId;
-    if (simulationId) where.simulationId = simulationId;
-    if (agentType) {
-      where.type = `agent.${agentType}`;
-    }
+    if (agentType) where.agent = agentType;
 
-    // Query agent decision events
-    const [events, total] = await Promise.all([
-      prisma.event.findMany({
+    // Query AgentDecision table (not Event table)
+    const [agentDecisions, total] = await Promise.all([
+      prisma.agentDecision.findMany({
         where,
         orderBy: { createdAt: 'desc' },
         take: limit,
         skip: offset,
-        include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-              role: true
-            }
-          }
-        }
       }),
-      prisma.event.count({ where })
+      prisma.agentDecision.count({ where })
     ]);
 
-    // Parse agent decisions from metadata
-    const decisions = events.map(event => {
-      const metadata = event.metadata as any;
-      return {
-        id: event.id,
-        timestamp: event.createdAt,
-        agentType: event.type.replace('agent.', ''),
-        userId: event.userId,
-        user: event.user,
-        decision: {
-          action: metadata?.action,
-          rationale: metadata?.rationale,
-          confidence: metadata?.confidence,
-          context: metadata?.context,
-          result: metadata?.result
-        },
-        metadata
-      };
-    });
+    // Format decisions for dashboard
+    const decisions = agentDecisions.map(ad => ({
+      id: ad.id,
+      timestamp: ad.createdAt,
+      agentType: ad.agent,
+      userId: ad.userId || 'system',
+      decision: {
+        action: (ad.decision as any)?.loop || (ad.decision as any)?.cohort || (ad.decision as any)?.showPresence || 'decision',
+        rationale: ad.rationale,
+        confidence: null, // Not stored in current schema
+        context: ad.decision,
+        result: null
+      }
+    }));
 
     // Get agent statistics
-    const agentStats = await prisma.event.groupBy({
-      by: ['type'],
-      where: {
-        type: { startsWith: 'agent.' },
-        ...(simulationId && { simulationId })
-      },
+    const agentStats = await prisma.agentDecision.groupBy({
+      by: ['agent'],
       _count: true
     });
 
     const stats = agentStats.map(stat => ({
-      agentType: stat.type.replace('agent.', ''),
+      agentType: stat.agent,
       totalDecisions: stat._count
     }));
 

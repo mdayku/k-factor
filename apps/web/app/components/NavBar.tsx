@@ -19,10 +19,10 @@ export default function NavBar() {
   }
 
   const links = [
-    { href: "/presence" as Route, label: "🏠 Home", icon: "🏠" },
-    { href: "/practice" as Route, label: "📚 Practice", icon: "📚" },
-    { href: "/test-challenges" as Route, label: "⚔️ Challenges", icon: "⚔️" },
-    { href: "/dashboard" as Route, label: "📊 Dashboard", icon: "📊" },
+    { href: "/presence" as Route, label: "Home" },
+    { href: "/practice" as Route, label: "Practice" },
+    { href: "/test-challenges" as Route, label: "Challenges" },
+    { href: "/dashboard" as Route, label: "Dashboard" },
   ];
 
   return (
@@ -43,16 +43,13 @@ export default function NavBar() {
       }}>
         {/* Logo / Brand */}
         <Link href="/presence" style={{
-          fontSize: "20px",
-          fontWeight: "700",
+          fontSize: "18px",
+          fontWeight: "600",
           color: "white",
           textDecoration: "none",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
+          letterSpacing: "0.5px",
         }}>
-          <span style={{ fontSize: "24px" }}>🎓</span>
-          <span>VT K-Factor</span>
+          VT K-Factor
         </Link>
 
         {/* Nav Links */}
@@ -68,21 +65,19 @@ export default function NavBar() {
                 key={link.href}
                 href={link.href}
                 style={{
-                  padding: "8px 16px",
-                  borderRadius: "8px",
+                  padding: "10px 20px",
+                  borderRadius: "6px",
                   color: "white",
                   textDecoration: "none",
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  background: isActive ? "rgba(255,255,255,0.2)" : "transparent",
-                  transition: "background 0.2s",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
+                  fontSize: "15px",
+                  fontWeight: isActive ? "600" : "500",
+                  background: isActive ? "rgba(255,255,255,0.25)" : "transparent",
+                  transition: "all 0.2s",
+                  borderBottom: isActive ? "2px solid white" : "2px solid transparent",
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
-                    e.currentTarget.style.background = "rgba(255,255,255,0.1)";
+                    e.currentTarget.style.background = "rgba(255,255,255,0.15)";
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -91,8 +86,7 @@ export default function NavBar() {
                   }
                 }}
               >
-                <span>{link.icon}</span>
-                <span>{link.label.split(" ")[1]}</span>
+                {link.label}
               </Link>
             );
           })}
@@ -117,11 +111,12 @@ export default function NavBar() {
                 width: "32px",
                 height: "32px",
                 borderRadius: "50%",
-                background: "rgba(255,255,255,0.2)",
+                background: "rgba(255,255,255,0.3)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: "16px",
+                fontSize: "14px",
+                fontWeight: "600",
               }}>
                 {session.user.image ? (
                   <img
@@ -135,7 +130,7 @@ export default function NavBar() {
                     }}
                   />
                 ) : (
-                  <span>👤</span>
+                  <span>{(session.user.name || "U").charAt(0).toUpperCase()}</span>
                 )}
               </div>
               <span style={{ fontWeight: "500" }}>
