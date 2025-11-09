@@ -56,9 +56,11 @@ interface LoopMetrics {
   displayName: string;
   invitesSent: number;
   invitesOpened: number;
-  conversions: number;
+  accountsCreated: number;
+  fvmReached: number;
   openRate: number;
   conversionRate: number;
+  fvmRate: number;
   kFactor: number;
   cohort: 'control' | 'treatment';
 }
