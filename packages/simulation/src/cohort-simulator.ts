@@ -178,13 +178,25 @@ export class CohortSimulator {
   ): SyntheticUser[] {
     const referredUsers: SyntheticUser[] = [];
     
+    // Get all existing invite.sent events to extract their signedLinkIds
+    const allEvents = this.eventGenerator.getAllEvents();
+    
     for (let i = 0; i < journeys.length; i++) {
       const journey = journeys[i];
       const inviter = users[i];
 
-      // For each invite sent, simulate opens and conversions
-      for (let inviteNum = 0; inviteNum < journey.invitesSent; inviteNum++) {
-        const signedLinkId = `link_${inviter.userId}_${Date.now()}_${inviteNum}`;
+      // Get all invite.sent events for this user
+      const inviteSentEvents = allEvents.filter(
+        e => e.type === 'invite.sent' && e.userId === inviter.userId
+      );
+
+      // For each invite sent, simulate opens and conversions using the ACTUAL signedLinkIds
+      for (let inviteNum = 0; inviteNum < inviteSentEvents.length; inviteNum++) {
+        const inviteEvent = inviteSentEvents[inviteNum];
+        const signedLinkId = inviteEvent.metadata?.signedLinkId;
+        const loop = inviteEvent.metadata?.loop || 'unknown';
+        
+        if (!signedLinkId) continue; // Skip if no signedLinkId
         
         // Invite opened?
         if (Math.random() < config.behaviorConfig.inviteOpenRate) {
@@ -199,6 +211,7 @@ export class CohortSimulator {
             metadata: {
               signedLinkId,
               referrerId: inviter.userId,
+              loop, // Pass through the viral loop name
               cohort: config.name
             }
           });
