@@ -5,6 +5,7 @@
 
 import { PrismaClient } from '@prisma/client';
 import { CohortSimulator } from '../packages/simulation/src/cohort-simulator.js';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -135,6 +136,29 @@ async function main() {
     where: { isSimulated: true }
   });
   console.log(`✅ Cleared ${deletedUsers.count} simulated users and ${deletedEvents.count} simulated events\n`);
+
+  // Create demo user (non-simulated, permanent)
+  console.log('👤 Creating demo user...');
+  const hashedPassword = await bcrypt.hash('demo123', 10);
+  
+  await prisma.user.upsert({
+    where: { email: 'demo@example.com' },
+    update: {
+      password: hashedPassword,
+    },
+    create: {
+      id: 'demo-user-fixed-id',
+      email: 'demo@example.com',
+      password: hashedPassword,
+      name: 'Demo User',
+      role: 'STUDENT',
+      age: 16,
+      isMinor: false,
+      parentalConsent: true,
+      isSimulated: false,
+    },
+  });
+  console.log(`✅ Demo user ready (email: demo@example.com, password: demo123)\n`);
 
   // Run simulation (in-memory only)
   console.log('🧪 Generating simulation data (Monte Carlo simulation - single run)...');
