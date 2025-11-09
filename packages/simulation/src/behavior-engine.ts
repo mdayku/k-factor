@@ -122,7 +122,7 @@ export const TREATMENT_CONFIG: BehaviorConfig = {
   avgSessionDuration: 2400, // 40 minutes (longer engagement)
   avgTimeBetweenSessions: 86400 * 1.5, // 1.5 days (more frequent)
   avgTimeToInvite: 1800, // 30 minutes (faster to invite)
-  avgInvitesPerUser: 20.0, // Calibrated to hit K~1.20
+  avgInvitesPerUser: 10.0, // Halved from 20.0 to reduce K-factor
   viralBoost: 2.0, // Stronger viral boost
   
   // Loop-specific configs (Treatment group - 4 viral loop features with distinct performance)
@@ -133,7 +133,7 @@ export const TREATMENT_CONFIG: BehaviorConfig = {
       openRate: 0.52, // Mid-tier - depends on relationship
       conversionRate: 0.38, // Mid-tier - not for everyone
       conversionVariance: 0.15,
-      avgInvitesPerActivation: 2.8, // Moderate invites
+      avgInvitesPerActivation: 1.4, // Halved from 2.8
     },
     "streak-rescue": {
       name: "Streak Rescue",
@@ -141,7 +141,7 @@ export const TREATMENT_CONFIG: BehaviorConfig = {
       openRate: 0.68, // HIGH - urgency + FOMO
       conversionRate: 0.48, // High - clear value prop
       conversionVariance: 0.12, // Consistent urgency
-      avgInvitesPerActivation: 2.2, // Fewer invites but high quality
+      avgInvitesPerActivation: 1.1, // Halved from 2.2
     },
     "study-buddy": {
       name: "Study Buddy",
@@ -149,7 +149,7 @@ export const TREATMENT_CONFIG: BehaviorConfig = {
       openRate: 0.72, // HIGHEST - reciprocal value
       conversionRate: 0.55, // HIGHEST - win-win proposition
       conversionVariance: 0.08, // Very consistent
-      avgInvitesPerActivation: 2.5, // Moderate invites
+      avgInvitesPerActivation: 1.25, // Halved from 2.5
     },
     "tutor-spotlight": {
       name: "Tutor Spotlight",
@@ -157,7 +157,7 @@ export const TREATMENT_CONFIG: BehaviorConfig = {
       openRate: 0.45, // Lower - trust-dependent
       conversionRate: 0.42, // Mid-tier - quality over quantity
       conversionVariance: 0.10,
-      avgInvitesPerActivation: 1.8, // Fewer invites (more targeted)
+      avgInvitesPerActivation: 0.9, // Halved from 1.8
     },
   },
 };

@@ -70,21 +70,10 @@ async function calculateLoopMetrics(
 
   const metrics: LoopMetrics[] = [];
 
-  // Get seed users for this cohort (for K-factor calculation)
-  const seedUsers = await prisma.event.count({
-    where: {
-      ...baseWhere,
-      type: 'account.created',
-      metadata: {
-        path: ['referrerSignedLinkId'],
-        equals: null,
-      },
-    },
-  });
-
   for (const loop of loops) {
-    // Get all invite events for this loop to extract stored rates
-    const inviteEvents = await prisma.event.findMany({
+    // 1. Get invite.sent events for this loop in this cohort
+    // Extract signedLinkIds to trace the funnel
+    const inviteSentEvents = await prisma.event.findMany({
       where: {
         ...baseWhere,
         type: 'invite.sent',
@@ -97,39 +86,67 @@ async function calculateLoopMetrics(
         metadata: true,
       },
     });
-
-    const invitesSent = inviteEvents.length;
-
-    // Calculate average rates from stored metadata (simulation parameters)
-    const avgOpenRate = inviteEvents.length > 0
-      ? inviteEvents.reduce((sum, e: any) => {
-          const openRate = e.metadata?.loopOpenRate || 0.3;
-          return sum + openRate;
-        }, 0) / inviteEvents.length
-      : 0.3;
-
-    const avgConversionRate = inviteEvents.length > 0
-      ? inviteEvents.reduce((sum, e: any) => {
-          const conversionRate = e.metadata?.loopConversionRate || 0.25;
-          return sum + conversionRate;
-        }, 0) / inviteEvents.length
-      : 0.25;
-
-    // Apply rates to calculate funnel progression
-    const invitesOpened = Math.round(invitesSent * avgOpenRate);
-    const accountsCreated = Math.round(invitesOpened * avgConversionRate);
+    const invitesSent = inviteSentEvents.length;
     
-    // FVM rate: assume 52% reach FVM (from overall funnel: 1116/2156 ≈ 52%)
-    const fvmReached = Math.round(accountsCreated * 0.52);
+    // Extract signedLinkIds from invite.sent events
+    const signedLinkIds = inviteSentEvents
+      .map((e: any) => e.metadata?.signedLinkId)
+      .filter(Boolean) as string[];
 
-    // Calculate rates
+    // 2. Count invite.opened events for these signedLinkIds
+    const invitesOpened = signedLinkIds.length > 0 ? await prisma.event.count({
+      where: {
+        ...baseWhere,
+        type: 'invite.opened',
+        metadata: {
+          path: ['signedLinkId'],
+          in: signedLinkIds,
+        },
+      },
+    }) : 0;
+
+    // 3. Get account.created events where referrerSignedLinkId matches
+    const accountCreatedEvents = signedLinkIds.length > 0 ? await prisma.event.findMany({
+      where: {
+        ...baseWhere,
+        type: 'account.created',
+        metadata: {
+          path: ['referrerSignedLinkId'],
+          in: signedLinkIds,
+        },
+      },
+      select: {
+        userId: true,
+      },
+    }) : [];
+    
+    const accountsCreated = accountCreatedEvents.length;
+    const referredUserIds = accountCreatedEvents
+      .map(e => e.userId)
+      .filter(Boolean) as string[];
+
+    // 4. Count FVM (session.start with questionsAnswered > 0) for referred users
+    const fvmReached = referredUserIds.length > 0 ? await prisma.event.count({
+      where: {
+        ...baseWhere,
+        type: 'session.start',
+        userId: {
+          in: referredUserIds,
+        },
+        metadata: {
+          path: ['questionsAnswered'],
+          gt: 0,
+        },
+      },
+    }) : 0;
+
+    // Calculate cascading percentages (each step ÷ previous step)
     const openRate = invitesSent > 0 ? invitesOpened / invitesSent : 0;
     const conversionRate = invitesOpened > 0 ? accountsCreated / invitesOpened : 0;
     const fvmRate = accountsCreated > 0 ? fvmReached / accountsCreated : 0;
 
-    // K-factor = (invites per seed user) × (conversion rate)
-    const invitesPerUser = seedUsers > 0 ? invitesSent / seedUsers : 0;
-    const kFactor = invitesPerUser * conversionRate;
+    // Final conversion rate (FVM / Invites Sent)
+    const finalConversionRate = invitesSent > 0 ? fvmReached / invitesSent : 0;
 
     metrics.push({
       loop: loop.key,
@@ -141,7 +158,7 @@ async function calculateLoopMetrics(
       openRate,
       conversionRate,
       fvmRate,
-      kFactor,
+      kFactor: finalConversionRate, // Use this field for final conversion rate
       cohort,
     });
   }

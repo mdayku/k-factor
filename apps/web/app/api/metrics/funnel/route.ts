@@ -119,7 +119,7 @@ export async function GET(request: NextRequest) {
       })
     }) : 0;
 
-    // Calculate conversion rates
+    // Calculate cascading conversion rates (each step ÷ previous step)
     const openRate = invitesSent > 0 ? (invitesOpened / invitesSent) * 100 : 0;
     const signupRate = invitesOpened > 0 ? (accountsCreated / invitesOpened) * 100 : 0;
     const fvmRate = accountsCreated > 0 ? (fvmReachedCount / accountsCreated) * 100 : 0;
@@ -136,19 +136,19 @@ export async function GET(request: NextRequest) {
         {
           stage: 'invite.opened',
           count: invitesOpened,
-          percentage: invitesSent > 0 ? (invitesOpened / invitesSent) * 100 : 0,
+          percentage: openRate,
           conversionFromPrevious: openRate
         },
         {
           stage: 'account.created',
           count: accountsCreated,
-          percentage: invitesSent > 0 ? (accountsCreated / invitesSent) * 100 : 0,
+          percentage: signupRate,
           conversionFromPrevious: signupRate
         },
         {
           stage: 'fvm.reached',
           count: fvmReachedCount,
-          percentage: invitesSent > 0 ? (fvmReachedCount / invitesSent) * 100 : 0,
+          percentage: fvmRate,
           conversionFromPrevious: fvmRate
         }
       ],

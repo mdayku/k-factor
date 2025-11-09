@@ -153,18 +153,22 @@ export default function Dashboard() {
   // View toggles
   const [showAgentLogs, setShowAgentLogs] = useState(false);
   const [showFraudMonitoring, setShowFraudMonitoring] = useState(false);
+  
+  // Agent logs filters & pagination
+  const [selectedAgentType, setSelectedAgentType] = useState<string>("");
+  const [agentLogsOffset, setAgentLogsOffset] = useState(0);
 
   // Fetch all metrics
   useEffect(() => {
     fetchAllMetrics();
   }, [simulationId, selectedCohort]);
 
-  // Fetch agent logs when toggled
+  // Fetch agent logs when toggled or filters change
   useEffect(() => {
-    if (showAgentLogs && !agentLogs) {
+    if (showAgentLogs) {
       fetchAgentLogs();
     }
-  }, [showAgentLogs]);
+  }, [showAgentLogs, selectedAgentType, agentLogsOffset]);
 
   // Fetch fraud events when toggled
   useEffect(() => {
@@ -211,12 +215,29 @@ export default function Dashboard() {
     try {
       const params = new URLSearchParams();
       if (simulationId) params.append("simulationId", simulationId);
-      params.append("limit", "20");
+      if (selectedAgentType) params.append("agentType", selectedAgentType);
+      params.append("limit", "50");
+      params.append("offset", agentLogsOffset.toString());
       
       const data = await fetch(`/api/agents/decisions?${params.toString()}`).then(r => r.json());
-      setAgentLogs(data);
+      
+      // If loading more (offset > 0), append to existing decisions
+      if (agentLogsOffset > 0 && agentLogs) {
+        setAgentLogs({
+          ...data,
+          decisions: [...agentLogs.decisions, ...data.decisions]
+        });
+      } else {
+        setAgentLogs(data);
+      }
     } catch (err) {
       console.error("Failed to fetch agent logs:", err);
+    }
+  };
+  
+  const loadMoreAgentLogs = () => {
+    if (agentLogs?.pagination.hasMore) {
+      setAgentLogsOffset(prev => prev + 50);
     }
   };
 
@@ -544,7 +565,7 @@ export default function Dashboard() {
                           </div>
                         </div>
 
-                        {/* K-Factor */}
+                        {/* Final Conversion Rate */}
                         <div style={{
                           marginTop: "12px",
                           paddingTop: "12px",
@@ -553,9 +574,9 @@ export default function Dashboard() {
                           justifyContent: "space-between",
                           alignItems: "center"
                         }}>
-                          <span style={{ fontSize: "12px", color: "#666" }}>K-Factor</span>
-                          <span style={{ fontSize: "20px", fontWeight: "bold", color: loop.kFactor >= 1.0 ? "#00d084" : "#666" }}>
-                            {loop.kFactor.toFixed(3)}
+                          <span style={{ fontSize: "12px", color: "#666" }}>Final Conversion</span>
+                          <span style={{ fontSize: "20px", fontWeight: "bold", color: loop.kFactor >= 0.05 ? "#00d084" : "#666" }}>
+                            {(loop.kFactor * 100).toFixed(1)}%
                           </span>
                         </div>
                       </div>
@@ -617,7 +638,7 @@ export default function Dashboard() {
                           </div>
                         </div>
 
-                        {/* K-Factor */}
+                        {/* Final Conversion Rate */}
                         <div style={{
                           marginTop: "12px",
                           paddingTop: "12px",
@@ -626,9 +647,9 @@ export default function Dashboard() {
                           justifyContent: "space-between",
                           alignItems: "center"
                         }}>
-                          <span style={{ fontSize: "12px", color: "#666" }}>K-Factor</span>
+                          <span style={{ fontSize: "12px", color: "#666" }}>Final Conversion</span>
                           <span style={{ fontSize: "20px", fontWeight: "bold", color: "#666" }}>
-                            {loop.kFactor.toFixed(3)}
+                            {(loop.kFactor * 100).toFixed(1)}%
                           </span>
                         </div>
                       </div>
@@ -665,14 +686,42 @@ export default function Dashboard() {
               borderRadius: "8px",
               boxShadow: "0 2px 4px rgba(0,0,0,0.05)"
             }}>
+              {/* Filter Dropdown */}
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ fontSize: "14px", fontWeight: "600", marginRight: "12px" }}>
+                  Filter by Agent Type:
+                </label>
+                <select 
+                  value={selectedAgentType} 
+                  onChange={(e) => {
+                    setSelectedAgentType(e.target.value);
+                    setAgentLogsOffset(0);
+                  }}
+                  style={{
+                    padding: "8px 12px",
+                    fontSize: "14px",
+                    borderRadius: "4px",
+                    border: "1px solid #ddd"
+                  }}
+                >
+                  <option value="">All Agents</option>
+                  {agentLogs.stats && agentLogs.stats.map(stat => (
+                    <option key={stat.agentType} value={stat.agentType}>
+                      {stat.agentType} ({stat.totalDecisions})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {agentLogs.stats && agentLogs.stats.length > 0 && (
-                <div style={{ marginBottom: "24px", display: "flex", gap: "16px" }}>
+                <div style={{ marginBottom: "24px", display: "flex", gap: "16px", flexWrap: "wrap" }}>
                   {agentLogs.stats.map(stat => (
                     <div key={stat.agentType} style={{
                       padding: "12px",
                       background: "#f9f9f9",
                       borderRadius: "4px",
-                      flex: 1
+                      flex: 1,
+                      minWidth: "150px"
                     }}>
                       <div style={{ fontSize: "12px", color: "#666" }}>
                         {stat.agentType}
@@ -686,7 +735,7 @@ export default function Dashboard() {
               )}
 
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                {agentLogs.decisions && agentLogs.decisions.slice(0, 10).map(decision => (
+                {agentLogs.decisions && agentLogs.decisions.map(decision => (
                   <div key={decision.id} style={{
                     padding: "16px",
                     background: "#f9f9f9",
@@ -712,6 +761,27 @@ export default function Dashboard() {
                   </div>
                 ))}
               </div>
+
+              {/* Load More Button */}
+              {agentLogs.pagination && agentLogs.pagination.hasMore && agentLogs.decisions && agentLogs.decisions.length > 0 && (
+                <div style={{ marginTop: "16px", textAlign: "center" }}>
+                  <button
+                    onClick={loadMoreAgentLogs}
+                    style={{
+                      padding: "12px 24px",
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      background: "#0070f3",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Load More ({agentLogs.pagination.total - agentLogs.decisions.length} remaining)
+                  </button>
+                </div>
+              )}
 
               {agentLogs.decisions && agentLogs.decisions.length === 0 && (
                 <div style={{ textAlign: "center", padding: "32px", color: "#999" }}>
