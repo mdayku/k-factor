@@ -98,39 +98,15 @@ export const CONTROL_CONFIG: BehaviorConfig = {
   avgInvitesPerUser: 16.0, // Calibrated to hit K~0.8
   viralBoost: 1.0, // No boost for control
 
-  // Loop-specific configs (Control group - baseline viral mechanics)
+  // Loop-specific configs (Control group - NO viral loop features, traditional referral only)
   viralLoops: {
-    "buddy-challenge": {
-      name: "Buddy Challenge",
-      weight: 40, // Most popular loop
-      openRate: 0.48,
-      conversionRate: 0.32,
-      conversionVariance: 0.15,
-      avgInvitesPerActivation: 4.8, // Increased 2.4x to hit K~0.8
-    },
-    "streak-rescue": {
-      name: "Streak Rescue",
-      weight: 25,
-      openRate: 0.58,
-      conversionRate: 0.28,
-      conversionVariance: 0.20,
-      avgInvitesPerActivation: 4.3, // Increased 2.4x to hit K~0.8
-    },
-    "study-buddy": {
-      name: "Study Buddy",
-      weight: 20,
-      openRate: 0.42,
-      conversionRate: 0.36,
-      conversionVariance: 0.12,
-      avgInvitesPerActivation: 4.6, // Increased 2.4x to hit K~0.8
-    },
-    "tutor-spotlight": {
-      name: "Tutor Spotlight",
-      weight: 15,
-      openRate: 0.46,
-      conversionRate: 0.42,
-      conversionVariance: 0.10,
-      avgInvitesPerActivation: 5.8, // Increased 2.4x to hit K~0.8
+    "traditional-referral": {
+      name: "Traditional Referral",
+      weight: 100, // Only option for control
+      openRate: 0.28, // Lower - no compelling context
+      conversionRate: 0.25, // Lower - generic "join me" invite
+      conversionVariance: 0.18,
+      avgInvitesPerActivation: 2.5, // Fewer invites per activation (less motivated)
     },
   },
 };
@@ -149,39 +125,39 @@ export const TREATMENT_CONFIG: BehaviorConfig = {
   avgInvitesPerUser: 20.0, // Calibrated to hit K~1.20
   viralBoost: 2.0, // Stronger viral boost
   
-  // Loop-specific configs (Treatment group - enhanced viral mechanics)
+  // Loop-specific configs (Treatment group - 4 viral loop features with distinct performance)
   viralLoops: {
     "buddy-challenge": {
       name: "Buddy Challenge",
-      weight: 35, // Still popular but balanced
-      openRate: 0.65,
-      conversionRate: 0.50,
-      conversionVariance: 0.12, // Lower variance (more consistent UX)
-      avgInvitesPerActivation: 0.76, // Reduced 2.5x to hit K~1.20
+      weight: 35, // Popular - competitive angle
+      openRate: 0.52, // Mid-tier - depends on relationship
+      conversionRate: 0.38, // Mid-tier - not for everyone
+      conversionVariance: 0.15,
+      avgInvitesPerActivation: 2.8, // Moderate invites
     },
     "streak-rescue": {
       name: "Streak Rescue",
-      weight: 30, // Higher weight (urgency + gamification)
-      openRate: 0.72,
-      conversionRate: 0.45,
-      conversionVariance: 0.18, // Still higher variance (context-dependent)
-      avgInvitesPerActivation: 0.68, // Reduced 2.5x to hit K~1.20
+      weight: 30, // High weight - urgency drives action
+      openRate: 0.68, // HIGH - urgency + FOMO
+      conversionRate: 0.48, // High - clear value prop
+      conversionVariance: 0.12, // Consistent urgency
+      avgInvitesPerActivation: 2.2, // Fewer invites but high quality
     },
     "study-buddy": {
       name: "Study Buddy",
-      weight: 22, // Moderate increase
-      openRate: 0.56,
-      conversionRate: 0.52,
-      conversionVariance: 0.10, // Very consistent (mutual benefit clear)
-      avgInvitesPerActivation: 0.72, // Reduced 2.5x to hit K~1.20
+      weight: 25, // Very popular - mutual benefit
+      openRate: 0.72, // HIGHEST - reciprocal value
+      conversionRate: 0.55, // HIGHEST - win-win proposition
+      conversionVariance: 0.08, // Very consistent
+      avgInvitesPerActivation: 2.5, // Moderate invites
     },
     "tutor-spotlight": {
       name: "Tutor Spotlight",
-      weight: 13, // Slightly lower (more niche)
-      openRate: 0.60,
-      conversionRate: 0.56,
-      conversionVariance: 0.08, // Extremely consistent (trust-based)
-      avgInvitesPerActivation: 0.80, // Reduced 2.5x to hit K~1.20
+      weight: 10, // Lower weight - more niche
+      openRate: 0.45, // Lower - trust-dependent
+      conversionRate: 0.42, // Mid-tier - quality over quantity
+      conversionVariance: 0.10,
+      avgInvitesPerActivation: 1.8, // Fewer invites (more targeted)
     },
   },
 };

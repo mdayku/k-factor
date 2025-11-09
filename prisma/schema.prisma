@@ -72,6 +72,23 @@ enum Role {
   ADMIN
 }
 
+// User progress tracking for practice mode
+model UserProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  lessonId    String
+  subject     String
+  completed   Boolean  @default(false)
+  score       Float?
+  completedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, lessonId])
+  @@index([userId])
+  @@index([lessonId])
+}
+
 // Signed smart links with attribution
 model SignedLink {
   id        String @id @default(cuid())

@@ -1,12 +1,35 @@
 # PRD — 10x K-Factor (Production Roadmap)
 
-## 🎯 Current Status: **Phase 4 COMPLETE! Production Demo Ready 🎯**
+## 🎯 Current Status: **FINAL SUBMISSION READY! 🎉**
 
-**All 7 MCP agents** | **OpenAI AI agents live** | **Simulation engine live** | **Database deployed (Supabase)** | **1,200+ users seeded** | **390,000+ events** | **18 API endpoints** | **✅ Metrics Dashboard Live** | **✅ Study Mode Complete** | **✅ Email Invitations Working** | **✅ Event Tracking for AI** | **✅ Deployed (Vercel + Railway)**
+**All 7 MCP agents** | **OpenAI AI agents live** | **Simulation engine live** | **Database deployed (Supabase)** | **3,156 users seeded** | **129,724 events** | **4,905 agent decisions** | **✅ Metrics Dashboard Live** | **✅ Study Mode Complete** | **✅ Email Invitations Working** | **✅ Event Tracking for AI** | **✅ Deployed (Vercel + Railway)**
 
-**Latest Milestone:** Study Mode complete with 200 geography questions, email invitations working (parental consent flow), event tracking system for AI retraining, dashboard polished, Vercel + Railway deployment configured, K-factor calibration finalized  
-**Current K-Factor Results:** Control K≈0.8, Treatment K≈1.2 (targets achieved!)  
-**Next Critical:** User profile page, final polish, demo rehearsal
+### Latest Submission (Final)
+
+**Control vs Treatment Fixed:**
+- Control: Traditional referral only (no viral loop features)
+- Treatment: 4 distinct viral loops with varying performance
+
+**Dashboard Improvements:**
+- Per-loop K-factor cards (4 funnel cards for treatment, 1 for control)
+- Agent decision logs (first 10k events)
+- Retention metrics removed (marked as placeholder)
+
+**Progress Persistence:**
+- Practice mode now saves to database (UserProgress model)
+- Migration added to build command for auto-deploy
+
+**UI Theme:**
+- Professional design system (VT-inspired colors)
+- Clean typography, reduced emojis
+- Consistent spacing and shadows
+
+**Current K-Factor Results:**  
+- Control: 0.500 (Target: 0.8) - Needs parameter tuning
+- Treatment: 3.812 (Target: 1.2) - Needs parameter tuning  
+- Lift: +662.4%
+
+**Next:** Parameter tuning to hit exact targets, then DEMO READY! 🚀
 
 ---
 

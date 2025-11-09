@@ -8,6 +8,117 @@ import { CohortSimulator } from '../packages/simulation/src/cohort-simulator.js'
 
 const prisma = new PrismaClient();
 
+/**
+ * Generate agent decision for an event
+ */
+function generateAgentDecision(event: any): any | null {
+  const agentMap: Record<string, { agent: string; makeDecision: (e: any) => any }> = {
+    'invite.sent': {
+      agent: 'personalization',
+      makeDecision: (e) => ({
+        decision: {
+          loop: e.metadata?.loop || 'traditional-referral',
+          copyVariant: e.metadata?.copy?.version || 'A',
+          channel: e.metadata?.channel || 'email',
+          personalized: true,
+        },
+        rationale: `Selected ${e.metadata?.loop || 'traditional'} loop with ${e.metadata?.copy?.tone || 'friendly'} tone based on user persona and context`,
+        featuresUsed: {
+          userPersona: e.metadata?.persona || 'student',
+          historicalEngagement: Math.random() > 0.5,
+          viralLoop: e.metadata?.loop || 'traditional-referral',
+        },
+        latencyMs: Math.floor(Math.random() * 50) + 10, // 10-60ms
+      })
+    },
+    'account.created': {
+      agent: 'experimentation',
+      makeDecision: (e) => ({
+        decision: {
+          cohort: e.metadata?.cohort || (Math.random() > 0.5 ? 'treatment' : 'control'),
+          experimentId: 'viral-loops-v1',
+          assignedFeatures: e.metadata?.cohort === 'treatment' 
+            ? ['buddy-challenge', 'streak-rescue', 'study-buddy', 'tutor-spotlight']
+            : [],
+        },
+        rationale: `Assigned user to ${e.metadata?.cohort || 'control'} cohort for viral loops A/B test`,
+        featuresUsed: {
+          randomSeed: Math.floor(Math.random() * 1000000),
+          userProperties: { isReferred: e.metadata?.referral || false },
+        },
+        latencyMs: Math.floor(Math.random() * 30) + 5,
+      })
+    },
+    'session.start': {
+      agent: 'social-presence',
+      makeDecision: (e) => ({
+        decision: {
+          showPresence: Math.random() > 0.3,
+          cohortRoom: e.metadata?.subject ? `cohort_${e.metadata.subject.toLowerCase()}_${Math.floor(Math.random() * 5) + 1}` : null,
+          activeUsers: Math.floor(Math.random() * 20) + 3,
+        },
+        rationale: 'Determined optimal presence signals to show based on subject and time of day',
+        featuresUsed: {
+          subject: e.metadata?.subject || 'general',
+          timeOfDay: new Date(e.ts).getHours(),
+        },
+        latencyMs: Math.floor(Math.random() * 40) + 15,
+      })
+    },
+    'practice.complete': {
+      agent: 'incentives',
+      makeDecision: (e) => ({
+        decision: {
+          showViralCTA: Math.random() > 0.4,
+          viralLoop: ['buddy-challenge', 'streak-rescue', 'study-buddy'][Math.floor(Math.random() * 3)],
+          incentiveType: Math.random() > 0.6 ? 'badge' : 'progress',
+        },
+        rationale: `User completed practice with score ${e.metadata?.score || 'unknown'}, showing viral CTA with contextual incentive`,
+        featuresUsed: {
+          score: e.metadata?.score || 0,
+          consecutiveSessions: Math.floor(Math.random() * 5) + 1,
+          viralPropensity: Math.random(),
+        },
+        latencyMs: Math.floor(Math.random() * 60) + 20,
+      })
+    },
+    'challenge.created': {
+      agent: 'tutor-advocacy',
+      makeDecision: (e) => ({
+        decision: {
+          tutorMatch: Math.random() > 0.7,
+          tutorId: Math.random() > 0.7 ? `tutor_${Math.floor(Math.random() * 100)}` : null,
+          recommendTutor: Math.random() > 0.5,
+        },
+        rationale: 'Challenge context suggests tutor pairing could improve outcomes',
+        featuresUsed: {
+          challengeType: e.metadata?.challengeType || 'buddy-challenge',
+          subject: e.metadata?.subject || 'general',
+          difficulty: Math.random() > 0.5 ? 'hard' : 'medium',
+        },
+        latencyMs: Math.floor(Math.random() * 80) + 30,
+      })
+    },
+  };
+
+  const handler = agentMap[event.type];
+  if (!handler) return null;
+
+  const baseDecision = handler.makeDecision(event);
+  
+  return {
+    agent: handler.agent,
+    decision: baseDecision.decision,
+    rationale: baseDecision.rationale,
+    featuresUsed: baseDecision.featuresUsed,
+    userId: event.userId || null,
+    sessionId: event.sessionId || null,
+    loop: event.metadata?.loop || null,
+    latencyMs: baseDecision.latencyMs,
+    createdAt: new Date(event.ts),
+  };
+}
+
 async function main() {
   console.log('🌱 Starting database seed...\n');
   
@@ -89,6 +200,27 @@ async function main() {
   await prisma.event.createMany({ data: eventData });
   console.log(`✅ Created ${simulationEvents.length} events\n`);
 
+  // Generate agent decisions for first 10k events
+  console.log('🤖 Generating agent decisions (first 10,000 events)...');
+  const agentDecisions: any[] = [];
+  const eventsToProcess = Math.min(simulationEvents.length, 10000);
+  
+  for (let i = 0; i < eventsToProcess; i++) {
+    const event = simulationEvents[i];
+    
+    // Generate agent decision based on event type
+    const decision = generateAgentDecision(event);
+    if (decision) {
+      agentDecisions.push(decision);
+    }
+  }
+  
+  if (agentDecisions.length > 0) {
+    console.log(`   Inserting ${agentDecisions.length} agent decisions in batch...`);
+    await prisma.agentDecision.createMany({ data: agentDecisions });
+    console.log(`✅ Created ${agentDecisions.length} agent decisions\n`);
+  }
+
   // Summary
   console.log('═'.repeat(60));
   console.log('🎉 Database seed complete!\n');
@@ -96,6 +228,7 @@ async function main() {
   console.log(`   Simulation ID: ${simulationId}`);
   console.log(`   Users: ${users.length}`);
   console.log(`   Events: ${simulationEvents.length}`);
+  console.log(`   Agent Decisions: ${agentDecisions.length}`);
   console.log(`   Control K-factor: ${experiment.control.kFactor.toFixed(3)}`);
   console.log(`   Treatment K-factor: ${experiment.treatment.kFactor.toFixed(3)}`);
   console.log(`   K-factor lift: +${experiment.kFactorLift.toFixed(1)}%`);

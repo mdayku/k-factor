@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { theme } from "@/lib/theme";
 
 // Types for our API responses
 interface KFactorData {
@@ -48,6 +49,23 @@ interface RetentionData {
     d7: { retained: number; total: number; rate: number };
     d28: { retained: number; total: number; rate: number };
   };
+}
+
+interface LoopMetrics {
+  loop: string;
+  displayName: string;
+  invitesSent: number;
+  invitesOpened: number;
+  conversions: number;
+  openRate: number;
+  conversionRate: number;
+  kFactor: number;
+  cohort: 'control' | 'treatment';
+}
+
+interface ViralLoopsData {
+  control: LoopMetrics[];
+  treatment: LoopMetrics[];
 }
 
 interface CohortComparisonData {
@@ -121,6 +139,7 @@ export default function Dashboard() {
   const [kFactorData, setKFactorData] = useState<KFactorData | null>(null);
   const [funnelData, setFunnelData] = useState<FunnelData | null>(null);
   const [retentionData, setRetentionData] = useState<RetentionData | null>(null);
+  const [viralLoopsData, setViralLoopsData] = useState<ViralLoopsData | null>(null);
   const [cohortData, setCohortData] = useState<CohortComparisonData | null>(null);
   const [agentLogs, setAgentLogs] = useState<AgentLogsData | null>(null);
   const [fraudEvents, setFraudEvents] = useState<EventData | null>(null);
@@ -164,10 +183,11 @@ export default function Dashboard() {
       const queryString = params.toString();
       
       // Fetch all metrics in parallel
-      const [kFactor, funnel, retention, cohort] = await Promise.all([
+      const [kFactor, funnel, retention, viralLoops, cohort] = await Promise.all([
         fetch(`/api/metrics/k-factor?${queryString}`).then(r => r.json()),
         fetch(`/api/metrics/funnel?${queryString}`).then(r => r.json()),
         fetch(`/api/metrics/retention?${queryString}`).then(r => r.json()),
+        fetch(`/api/metrics/viral-loops?${queryString}`).then(r => r.json()),
         selectedCohort === "all" 
           ? fetch(`/api/metrics/cohort-comparison?${params.toString().replace('cohort=all', '')}`).then(r => r.json())
           : Promise.resolve(null)
@@ -176,6 +196,7 @@ export default function Dashboard() {
       setKFactorData(kFactor);
       setFunnelData(funnel);
       setRetentionData(retention);
+      setViralLoopsData(viralLoops);
       setCohortData(cohort);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch metrics");
@@ -218,11 +239,16 @@ export default function Dashboard() {
     }}>
       {/* Header */}
       <div style={{ marginBottom: "32px" }}>
-        <h1 style={{ fontSize: "32px", fontWeight: "bold", marginBottom: "8px" }}>
-          📊 K-Factor Metrics Dashboard
+        <h1 style={{ 
+          fontSize: theme.typography.fontSize['4xl'], 
+          fontWeight: theme.typography.fontWeight.bold, 
+          marginBottom: "8px",
+          color: theme.colors.gray[900]
+        }}>
+          K-Factor Analytics Dashboard
         </h1>
-        <p style={{ color: "#666", fontSize: "14px" }}>
-          Real-time analytics from database • Phase 3 Complete ✅
+        <p style={{ color: theme.colors.gray[600], fontSize: theme.typography.fontSize.sm }}>
+          Real-time metrics and viral loop performance
         </p>
       </div>
 
@@ -282,13 +308,14 @@ export default function Dashboard() {
             disabled={loading}
             style={{
               padding: "8px 24px",
-              background: loading ? "#ccc" : "#0070f3",
+              background: loading ? theme.colors.gray[300] : theme.colors.primary[600],
               color: "white",
               border: "none",
-              borderRadius: "4px",
-              fontSize: "14px",
-              fontWeight: "500",
-              cursor: loading ? "not-allowed" : "pointer"
+              borderRadius: theme.borderRadius.md,
+              fontSize: theme.typography.fontSize.sm,
+              fontWeight: theme.typography.fontWeight.medium,
+              cursor: loading ? "not-allowed" : "pointer",
+              transition: "all 0.2s"
             }}
           >
             {loading ? "Loading..." : "Refresh"}
@@ -330,8 +357,13 @@ export default function Dashboard() {
               borderRadius: "8px",
               boxShadow: "0 2px 4px rgba(0,0,0,0.05)"
             }}>
-              <h2 style={{ fontSize: "20px", fontWeight: "600", marginBottom: "16px" }}>
-                🎯 K-Factor Metrics
+              <h2 style={{ 
+                fontSize: theme.typography.fontSize.xl, 
+                fontWeight: theme.typography.fontWeight.semibold, 
+                marginBottom: "16px",
+                color: theme.colors.gray[800]
+              }}>
+                K-Factor Metrics
               </h2>
               
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px" }}>
@@ -395,8 +427,13 @@ export default function Dashboard() {
               borderRadius: "8px",
               boxShadow: "0 2px 4px rgba(0,0,0,0.05)"
             }}>
-              <h2 style={{ fontSize: "20px", fontWeight: "600", marginBottom: "16px" }}>
-                🔁 Viral Funnel
+              <h2 style={{ 
+                fontSize: theme.typography.fontSize.xl, 
+                fontWeight: theme.typography.fontWeight.semibold, 
+                marginBottom: "16px",
+                color: theme.colors.gray[800]
+              }}>
+                Viral Funnel
               </h2>
               
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -434,8 +471,8 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Retention */}
-          {retentionData && retentionData.retention && (
+          {/* Viral Loops Breakdown */}
+          {viralLoopsData && (
             <div style={{
               padding: "24px",
               background: "white",
@@ -443,39 +480,146 @@ export default function Dashboard() {
               borderRadius: "8px",
               boxShadow: "0 2px 4px rgba(0,0,0,0.05)"
             }}>
-              <h2 style={{ fontSize: "20px", fontWeight: "600", marginBottom: "16px" }}>
-                📈 Retention Rates
+              <h2 style={{ 
+                fontSize: theme.typography.fontSize.xl, 
+                fontWeight: theme.typography.fontWeight.semibold, 
+                marginBottom: "16px",
+                color: theme.colors.gray[800]
+              }}>
+                Viral Loop Performance
               </h2>
-              
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
-                {retentionData.retention.d1 && (
-                  <RetentionCard
-                    label="Day 1"
-                    rate={retentionData.retention.d1.rate}
-                    retained={retentionData.retention.d1.retained}
-                    total={retentionData.retention.d1.total}
-                  />
-                )}
-                {retentionData.retention.d7 && (
-                  <RetentionCard
-                    label="Day 7"
-                    rate={retentionData.retention.d7.rate}
-                    retained={retentionData.retention.d7.retained}
-                    total={retentionData.retention.d7.total}
-                  />
-                )}
-                {retentionData.retention.d28 && (
-                  <RetentionCard
-                    label="Day 28"
-                    rate={retentionData.retention.d28.rate}
-                    retained={retentionData.retention.d28.retained}
-                    total={retentionData.retention.d28.total}
-                  />
-                )}
-              </div>
+
+              {/* Treatment Group Loops */}
+              {viralLoopsData.treatment && viralLoopsData.treatment.length > 0 && (
+                <div>
+                  <h3 style={{ fontSize: "16px", fontWeight: "600", marginBottom: "12px", color: "#0070f3" }}>
+                    Treatment Group (with viral loop features)
+                  </h3>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "16px", marginBottom: "24px" }}>
+                    {viralLoopsData.treatment.map(loop => (
+                      <div key={loop.loop} style={{
+                        padding: "16px",
+                        background: "#f8faff",
+                        border: "1px solid #d0e0ff",
+                        borderRadius: "8px"
+                      }}>
+                        <div style={{ fontSize: "16px", fontWeight: "600", marginBottom: "12px" }}>
+                          {loop.displayName}
+                        </div>
+                        
+                        {/* Mini Funnel */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
+                          <div style={{ fontSize: "12px", display: "flex", justifyContent: "space-between" }}>
+                            <span>Invites Sent</span>
+                            <span style={{ fontWeight: "600" }}>{loop.invitesSent}</span>
+                          </div>
+                          <div style={{ height: "6px", background: "#e0e0e0", borderRadius: "3px", overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: "100%", background: "#0070f3" }} />
+                          </div>
+
+                          <div style={{ fontSize: "12px", display: "flex", justifyContent: "space-between" }}>
+                            <span>Opened ({(loop.openRate * 100).toFixed(1)}%)</span>
+                            <span style={{ fontWeight: "600" }}>{loop.invitesOpened}</span>
+                          </div>
+                          <div style={{ height: "6px", background: "#e0e0e0", borderRadius: "3px", overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: `${loop.openRate * 100}%`, background: "#00a6ff" }} />
+                          </div>
+
+                          <div style={{ fontSize: "12px", display: "flex", justifyContent: "space-between" }}>
+                            <span>Converted ({(loop.conversionRate * 100).toFixed(1)}%)</span>
+                            <span style={{ fontWeight: "600" }}>{loop.conversions}</span>
+                          </div>
+                          <div style={{ height: "6px", background: "#e0e0e0", borderRadius: "3px", overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: `${loop.conversionRate * 100}%`, background: "#00d084" }} />
+                          </div>
+                        </div>
+
+                        {/* K-Factor */}
+                        <div style={{
+                          marginTop: "12px",
+                          paddingTop: "12px",
+                          borderTop: "1px solid #d0e0ff",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center"
+                        }}>
+                          <span style={{ fontSize: "12px", color: "#666" }}>K-Factor</span>
+                          <span style={{ fontSize: "20px", fontWeight: "bold", color: loop.kFactor >= 1.0 ? "#00d084" : "#666" }}>
+                            {loop.kFactor.toFixed(3)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Control Group */}
+              {viralLoopsData.control && viralLoopsData.control.length > 0 && (
+                <div>
+                  <h3 style={{ fontSize: "16px", fontWeight: "600", marginBottom: "12px", color: "#666" }}>
+                    Control Group (traditional referral only)
+                  </h3>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "16px" }}>
+                    {viralLoopsData.control.map(loop => (
+                      <div key={loop.loop} style={{
+                        padding: "16px",
+                        background: "#f9f9f9",
+                        border: "1px solid #e0e0e0",
+                        borderRadius: "8px"
+                      }}>
+                        <div style={{ fontSize: "16px", fontWeight: "600", marginBottom: "12px" }}>
+                          {loop.displayName}
+                        </div>
+                        
+                        {/* Mini Funnel */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
+                          <div style={{ fontSize: "12px", display: "flex", justifyContent: "space-between" }}>
+                            <span>Invites Sent</span>
+                            <span style={{ fontWeight: "600" }}>{loop.invitesSent}</span>
+                          </div>
+                          <div style={{ height: "6px", background: "#e0e0e0", borderRadius: "3px", overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: "100%", background: "#666" }} />
+                          </div>
+
+                          <div style={{ fontSize: "12px", display: "flex", justifyContent: "space-between" }}>
+                            <span>Opened ({(loop.openRate * 100).toFixed(1)}%)</span>
+                            <span style={{ fontWeight: "600" }}>{loop.invitesOpened}</span>
+                          </div>
+                          <div style={{ height: "6px", background: "#e0e0e0", borderRadius: "3px", overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: `${loop.openRate * 100}%`, background: "#888" }} />
+                          </div>
+
+                          <div style={{ fontSize: "12px", display: "flex", justifyContent: "space-between" }}>
+                            <span>Converted ({(loop.conversionRate * 100).toFixed(1)}%)</span>
+                            <span style={{ fontWeight: "600" }}>{loop.conversions}</span>
+                          </div>
+                          <div style={{ height: "6px", background: "#e0e0e0", borderRadius: "3px", overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: `${loop.conversionRate * 100}%`, background: "#999" }} />
+                          </div>
+                        </div>
+
+                        {/* K-Factor */}
+                        <div style={{
+                          marginTop: "12px",
+                          paddingTop: "12px",
+                          borderTop: "1px solid #e0e0e0",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center"
+                        }}>
+                          <span style={{ fontSize: "12px", color: "#666" }}>K-Factor</span>
+                          <span style={{ fontSize: "20px", fontWeight: "bold", color: "#666" }}>
+                            {loop.kFactor.toFixed(3)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
-
 
           {/* Agent Logs Toggle */}
           <div style={{

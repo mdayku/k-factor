@@ -55,13 +55,39 @@ export default function PracticePage() {
   const [reviewMode, setReviewMode] = useState(false);
   const [lastSessionScore, setLastSessionScore] = useState<number | null>(null);
 
-  // Load progress from localStorage
+  // Load progress from database
   useEffect(() => {
-    const saved = localStorage.getItem("geography_progress");
-    if (saved) {
-      setProgress(JSON.parse(saved));
-    }
-  }, []);
+    const fetchProgress = async () => {
+      if (!session?.user) return;
+      
+      try {
+        const res = await fetch("/api/user/progress");
+        const data = await res.json();
+        
+        if (data.progress) {
+          // Convert DB progress to local format
+          const progressMap: Progress = {};
+          data.progress.forEach((item: any) => {
+            if (!progressMap[item.subject]) {
+              progressMap[item.subject] = { completed: 0, total: 0, bestScore: 0 };
+            }
+            progressMap[item.subject].completed += 1;
+            if (item.score) {
+              progressMap[item.subject].bestScore = Math.max(
+                progressMap[item.subject].bestScore,
+                item.score
+              );
+            }
+          });
+          setProgress(progressMap);
+        }
+      } catch (err) {
+        console.error("Failed to load progress:", err);
+      }
+    };
+    
+    fetchProgress();
+  }, [session]);
 
   // Load units
   useEffect(() => {
@@ -113,7 +139,7 @@ export default function PracticePage() {
     }
   };
 
-  const handleAnswer = (answerIndex: number) => {
+  const handleAnswer = async (answerIndex: number) => {
     const newAnswers = [...answers, answerIndex];
     setAnswers(newAnswers);
 
@@ -125,7 +151,23 @@ export default function PracticePage() {
       setLastSessionScore(score);
       
       // Update progress
-      if (selectedUnit) {
+      if (selectedUnit && session?.user) {
+        // Save to database
+        try {
+          await fetch("/api/user/progress", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              lessonId: `geography_${selectedUnit}_${Date.now()}`,
+              subject: selectedUnit,
+              score: score,
+            }),
+          });
+        } catch (err) {
+          console.error("Failed to save progress:", err);
+        }
+        
+        // Update local state
         const newProgress = { ...progress };
         if (!newProgress[selectedUnit]) {
           newProgress[selectedUnit] = { completed: 0, total: 0, bestScore: 0 };
@@ -137,7 +179,6 @@ export default function PracticePage() {
           score
         );
         setProgress(newProgress);
-        localStorage.setItem("geography_progress", JSON.stringify(newProgress));
       }
       
       // Go to results
