@@ -94,51 +94,39 @@ async function calculateLoopMetrics(
       .filter(Boolean) as string[];
 
     // 2. Count invite.opened events for these signedLinkIds
-    const invitesOpened = signedLinkIds.length > 0 ? await prisma.event.count({
-      where: {
-        ...baseWhere,
-        type: 'invite.opened',
-        metadata: {
-          path: ['signedLinkId'],
-          in: signedLinkIds,
-        },
-      },
-    }) : 0;
+    // Use raw query since JSON array filtering isn't well supported
+    const invitesOpenedResult = signedLinkIds.length > 0 ? await prisma.$queryRaw<Array<{count: bigint}>>`
+      SELECT COUNT(*)::int as count
+      FROM "Event"
+      WHERE "type" = 'invite.opened'
+        AND "isSimulated" = true
+        AND "metadata"->>'signedLinkId' = ANY(${signedLinkIds})
+    ` : [{count: BigInt(0)}];
+    const invitesOpened = Number(invitesOpenedResult[0].count);
 
     // 3. Get account.created events where referrerSignedLinkId matches
-    const accountCreatedEvents = signedLinkIds.length > 0 ? await prisma.event.findMany({
-      where: {
-        ...baseWhere,
-        type: 'account.created',
-        metadata: {
-          path: ['referrerSignedLinkId'],
-          in: signedLinkIds,
-        },
-      },
-      select: {
-        userId: true,
-      },
-    }) : [];
+    const accountCreatedEvents = signedLinkIds.length > 0 ? await prisma.$queryRaw<Array<{userId: string}>>`
+      SELECT "userId"
+      FROM "Event"
+      WHERE "type" = 'account.created'
+        AND "isSimulated" = true
+        AND "metadata"->>'referrerSignedLinkId' = ANY(${signedLinkIds})
+        AND "userId" IS NOT NULL
+    ` : [];
     
     const accountsCreated = accountCreatedEvents.length;
-    const referredUserIds = accountCreatedEvents
-      .map(e => e.userId)
-      .filter(Boolean) as string[];
+    const referredUserIds = accountCreatedEvents.map(e => e.userId);
 
     // 4. Count FVM (session.start with questionsAnswered > 0) for referred users
-    const fvmReached = referredUserIds.length > 0 ? await prisma.event.count({
-      where: {
-        ...baseWhere,
-        type: 'session.start',
-        userId: {
-          in: referredUserIds,
-        },
-        metadata: {
-          path: ['questionsAnswered'],
-          gt: 0,
-        },
-      },
-    }) : 0;
+    const fvmReachedResult = referredUserIds.length > 0 ? await prisma.$queryRaw<Array<{count: bigint}>>`
+      SELECT COUNT(*)::int as count
+      FROM "Event"
+      WHERE "type" = 'session.start'
+        AND "isSimulated" = true
+        AND "userId" = ANY(${referredUserIds})
+        AND ("metadata"->>'questionsAnswered')::int > 0
+    ` : [{count: BigInt(0)}];
+    const fvmReached = Number(fvmReachedResult[0].count);
 
     // Calculate cascading percentages (each step ÷ previous step)
     const openRate = invitesSent > 0 ? invitesOpened / invitesSent : 0;

@@ -100,6 +100,42 @@ function generateAgentDecision(event: any): any | null {
         latencyMs: Math.floor(Math.random() * 80) + 30,
       })
     },
+    'invite.opened': {
+      agent: 'trust-safety',
+      makeDecision: (e) => ({
+        decision: {
+          fraudScore: Math.random() * 0.3, // Most users are legitimate
+          allowSignup: Math.random() > 0.02, // Block 2% as potential fraud
+          riskFactors: Math.random() > 0.9 ? ['suspicious_ip', 'rapid_signups'] : [],
+          requireVerification: Math.random() > 0.85,
+        },
+        rationale: `Fraud risk assessment: ${Math.random() > 0.98 ? 'HIGH RISK - unusual patterns detected' : 'Low risk - normal behavior'}`,
+        featuresUsed: {
+          ipAddress: `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.x.x`,
+          deviceFingerprint: `device_${Math.floor(Math.random() * 10000)}`,
+          behaviorScore: Math.random(),
+        },
+        latencyMs: Math.floor(Math.random() * 25) + 5,
+      })
+    },
+    'session.completed': {
+      agent: 'retention',
+      makeDecision: (e) => ({
+        decision: {
+          sendReEngagement: Math.random() > 0.7,
+          triggerTime: Math.floor(Math.random() * 48) + 24, // 24-72 hours
+          reEngagementType: ['email', 'push', 'sms'][Math.floor(Math.random() * 3)],
+          incentiveOffered: Math.random() > 0.6,
+        },
+        rationale: `User completed session with ${e.metadata?.rating || 'unknown'} rating - ${Math.random() > 0.7 ? 'high' : 'medium'} retention risk`,
+        featuresUsed: {
+          sessionDuration: e.metadata?.durationSeconds || 0,
+          rating: e.metadata?.rating || 0,
+          daysSinceSignup: Math.floor(Math.random() * 14),
+        },
+        latencyMs: Math.floor(Math.random() * 35) + 10,
+      })
+    },
   };
 
   const handler = agentMap[event.type];
