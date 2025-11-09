@@ -113,12 +113,13 @@ export async function GET(request: NextRequest) {
 
     // Step 4: FVM reached (only for referred users)
     const referredIds = referredUserIds.map(e => e.userId).filter(Boolean);
+    // Don't use addCohortFilter here - these users are already from the right cohort
     const fvmReachedCount = referredIds.length > 0 ? await prisma.event.count({
-      where: addCohortFilter({
+      where: {
         ...baseWhere,
         type: 'fvm.reached',
         userId: { in: referredIds }
-      })
+      }
     }) : 0;
 
     // Calculate cascading conversion rates (each step ÷ previous step)

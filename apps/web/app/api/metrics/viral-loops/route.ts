@@ -116,14 +116,13 @@ async function calculateLoopMetrics(
     const accountsCreated = accountCreatedEvents.length;
     const referredUserIds = accountCreatedEvents.map(e => e.userId);
 
-    // 4. Count FVM (session.start with questionsAnswered > 0) for referred users
+    // 4. Count FVM (fvm.reached events) for referred users
     const fvmReachedResult = referredUserIds.length > 0 ? await prisma.$queryRaw<Array<{count: bigint}>>`
       SELECT COUNT(*)::int as count
       FROM "Event"
-      WHERE "type" = 'session.start'
+      WHERE "type" = 'fvm.reached'
         AND "isSimulated" = true
         AND "userId" IN (${Prisma.join(referredUserIds)})
-        AND ("metadata"->>'questionsAnswered')::int > 0
     ` : [{count: BigInt(0)}];
     const fvmReached = Number(fvmReachedResult[0].count);
 
