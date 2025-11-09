@@ -296,9 +296,12 @@ export default function PracticePage() {
             }}>
               {units.map((unit, index) => {
                 const unitProgress = progress[unit] || { completed: 0, total: 0, bestScore: 0 };
-                const unitCompletion = unitProgress.completed > 0 
-                  ? Math.min(100, Math.round((unitProgress.completed / 3) * 100))
-                  : 0;
+                // Show 100% if they've completed all questions (bestScore >= total)
+                const unitCompletion = unitProgress.total > 0 && unitProgress.bestScore >= unitProgress.total
+                  ? 100
+                  : unitProgress.total > 0
+                    ? Math.round((unitProgress.bestScore / unitProgress.total) * 100)
+                    : 0;
                 
                 return (
                   <button

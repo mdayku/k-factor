@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -94,13 +94,12 @@ async function calculateLoopMetrics(
       .filter(Boolean) as string[];
 
     // 2. Count invite.opened events for these signedLinkIds
-    // Use raw query since JSON array filtering isn't well supported
     const invitesOpenedResult = signedLinkIds.length > 0 ? await prisma.$queryRaw<Array<{count: bigint}>>`
       SELECT COUNT(*)::int as count
       FROM "Event"
       WHERE "type" = 'invite.opened'
         AND "isSimulated" = true
-        AND "metadata"->>'signedLinkId' = ANY(${signedLinkIds})
+        AND "metadata"->>'signedLinkId' IN (${Prisma.join(signedLinkIds)})
     ` : [{count: BigInt(0)}];
     const invitesOpened = Number(invitesOpenedResult[0].count);
 
@@ -110,7 +109,7 @@ async function calculateLoopMetrics(
       FROM "Event"
       WHERE "type" = 'account.created'
         AND "isSimulated" = true
-        AND "metadata"->>'referrerSignedLinkId' = ANY(${signedLinkIds})
+        AND "metadata"->>'referrerSignedLinkId' IN (${Prisma.join(signedLinkIds)})
         AND "userId" IS NOT NULL
     ` : [];
     
@@ -123,7 +122,7 @@ async function calculateLoopMetrics(
       FROM "Event"
       WHERE "type" = 'session.start'
         AND "isSimulated" = true
-        AND "userId" = ANY(${referredUserIds})
+        AND "userId" IN (${Prisma.join(referredUserIds)})
         AND ("metadata"->>'questionsAnswered')::int > 0
     ` : [{count: BigInt(0)}];
     const fvmReached = Number(fvmReachedResult[0].count);

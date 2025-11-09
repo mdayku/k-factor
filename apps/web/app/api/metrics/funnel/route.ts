@@ -10,7 +10,9 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const simulationId = searchParams.get('simulationId');
-    const cohort = searchParams.get('cohort');
+    const cohortParam = searchParams.get('cohort');
+    // Viral Funnel excludes control group (only shows treatment viral loops)
+    const cohort = (cohortParam === 'all' || !cohortParam) ? 'treatment' : cohortParam;
     const isSimulated = searchParams.get('isSimulated');
 
     // Build base where clause
