@@ -107,14 +107,18 @@ async function calculateLoopMetrics(
     // Extract signedLinkIds from OPENED invites (not sent)
     const openedSignedLinkIds = invitesOpenedEvents.map(e => e.signedLinkId).filter(Boolean);
 
-    // 3. Get account.created events where referrerSignedLinkId matches OPENED invites
+    // 3. Get account.created events where referrerSignedLinkId is from THIS loop ONLY
+    // This ensures each account is attributed to exactly one loop
     const accountCreatedEvents = openedSignedLinkIds.length > 0 ? await prisma.$queryRaw<Array<{userId: string}>>`
-      SELECT "userId"
-      FROM "Event"
-      WHERE "type" = 'account.created'
-        AND "isSimulated" = true
-        AND "metadata"->>'referrerSignedLinkId' IN (${Prisma.join(openedSignedLinkIds)})
-        AND "userId" IS NOT NULL
+      SELECT e."userId"
+      FROM "Event" e
+      INNER JOIN "Event" sent ON sent."type" = 'invite.sent'
+        AND sent."metadata"->>'signedLinkId' = e."metadata"->>'referrerSignedLinkId'
+        AND sent."metadata"->>'loop' = ${loop.key}
+      WHERE e."type" = 'account.created'
+        AND e."isSimulated" = true
+        AND e."metadata"->>'referrerSignedLinkId' IN (${Prisma.join(openedSignedLinkIds)})
+        AND e."userId" IS NOT NULL
     ` : [];
     
     const accountsCreated = accountCreatedEvents.length;
