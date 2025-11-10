@@ -89,28 +89,31 @@ async function calculateLoopMetrics(
     const invitesSent = inviteSentEvents.length;
     
     // Extract signedLinkIds from invite.sent events
-    const signedLinkIds = inviteSentEvents
+    const sentSignedLinkIds = inviteSentEvents
       .map((e: any) => e.metadata?.signedLinkId)
       .filter(Boolean) as string[];
 
-    // 2. Count invite.opened events for these signedLinkIds AND this loop
-    const invitesOpenedResult = signedLinkIds.length > 0 ? await prisma.$queryRaw<Array<{count: bigint}>>`
-      SELECT COUNT(*)::int as count
+    // 2. Get invite.opened events for these signedLinkIds AND this loop, and extract their signedLinkIds
+    const invitesOpenedEvents = sentSignedLinkIds.length > 0 ? await prisma.$queryRaw<Array<{signedLinkId: string}>>`
+      SELECT DISTINCT "metadata"->>'signedLinkId' as "signedLinkId"
       FROM "Event"
       WHERE "type" = 'invite.opened'
         AND "isSimulated" = true
-        AND "metadata"->>'signedLinkId' IN (${Prisma.join(signedLinkIds)})
+        AND "metadata"->>'signedLinkId' IN (${Prisma.join(sentSignedLinkIds)})
         AND "metadata"->>'loop' = ${loop.key}
-    ` : [{count: BigInt(0)}];
-    const invitesOpened = Number(invitesOpenedResult[0].count);
+    ` : [];
+    const invitesOpened = invitesOpenedEvents.length;
+    
+    // Extract signedLinkIds from OPENED invites (not sent)
+    const openedSignedLinkIds = invitesOpenedEvents.map(e => e.signedLinkId).filter(Boolean);
 
-    // 3. Get account.created events where referrerSignedLinkId matches
-    const accountCreatedEvents = signedLinkIds.length > 0 ? await prisma.$queryRaw<Array<{userId: string}>>`
+    // 3. Get account.created events where referrerSignedLinkId matches OPENED invites
+    const accountCreatedEvents = openedSignedLinkIds.length > 0 ? await prisma.$queryRaw<Array<{userId: string}>>`
       SELECT "userId"
       FROM "Event"
       WHERE "type" = 'account.created'
         AND "isSimulated" = true
-        AND "metadata"->>'referrerSignedLinkId' IN (${Prisma.join(signedLinkIds)})
+        AND "metadata"->>'referrerSignedLinkId' IN (${Prisma.join(openedSignedLinkIds)})
         AND "userId" IS NOT NULL
     ` : [];
     
