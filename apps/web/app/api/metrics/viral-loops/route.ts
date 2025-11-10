@@ -93,19 +93,30 @@ async function calculateLoopMetrics(
       .map((e: any) => e.metadata?.signedLinkId)
       .filter(Boolean) as string[];
 
-    // 2. Get invite.opened events for these signedLinkIds AND this loop, and extract their signedLinkIds
-    const invitesOpenedEvents = sentSignedLinkIds.length > 0 ? await prisma.$queryRaw<Array<{signedLinkId: string}>>`
-      SELECT DISTINCT "metadata"->>'signedLinkId' as "signedLinkId"
-      FROM "Event"
-      WHERE "type" = 'invite.opened'
-        AND "isSimulated" = true
-        AND "metadata"->>'signedLinkId' IN (${Prisma.join(sentSignedLinkIds)})
-        AND "metadata"->>'loop' = ${loop.key}
-    ` : [];
-    const invitesOpened = invitesOpenedEvents.length;
+    // 2. Count opens AND get unique signedLinkIds that were opened for this loop
+    const [invitesOpenedCount, openedLinksForLoop] = sentSignedLinkIds.length > 0 ? await Promise.all([
+      // Count total opens
+      prisma.$queryRaw<Array<{count: bigint}>>`
+        SELECT COUNT(*)::int as count
+        FROM "Event"
+        WHERE "type" = 'invite.opened'
+          AND "isSimulated" = true
+          AND "metadata"->>'signedLinkId' IN (${Prisma.join(sentSignedLinkIds)})
+          AND "metadata"->>'loop' = ${loop.key}
+      `,
+      // Get distinct signedLinkIds for tracing conversions
+      prisma.$queryRaw<Array<{signedLinkId: string}>>`
+        SELECT DISTINCT "metadata"->>'signedLinkId' as "signedLinkId"
+        FROM "Event"
+        WHERE "type" = 'invite.opened'
+          AND "isSimulated" = true
+          AND "metadata"->>'signedLinkId' IN (${Prisma.join(sentSignedLinkIds)})
+          AND "metadata"->>'loop' = ${loop.key}
+      `
+    ]) : [[{count: BigInt(0)}], []];
     
-    // Extract signedLinkIds from OPENED invites (not sent)
-    const openedSignedLinkIds = invitesOpenedEvents.map(e => e.signedLinkId).filter(Boolean);
+    const invitesOpened = Number(invitesOpenedCount[0].count);
+    const openedSignedLinkIds = openedLinksForLoop.map(e => e.signedLinkId).filter(Boolean);
 
     // 3. Get account.created events where referrerSignedLinkId is from opened invites
     // openedSignedLinkIds is already filtered by loop, so this ensures unique attribution

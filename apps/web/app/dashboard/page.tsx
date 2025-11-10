@@ -52,25 +52,6 @@ interface RetentionData {
   };
 }
 
-interface LoopMetrics {
-  loop: string;
-  displayName: string;
-  invitesSent: number;
-  invitesOpened: number;
-  accountsCreated: number;
-  fvmReached: number;
-  openRate: number;
-  conversionRate: number;
-  fvmRate: number;
-  kFactor: number;
-  cohort: 'control' | 'treatment';
-}
-
-interface ViralLoopsData {
-  control: LoopMetrics[];
-  treatment: LoopMetrics[];
-}
-
 interface CohortComparisonData {
   control: any;
   treatment: any;
@@ -141,8 +122,8 @@ export default function Dashboard() {
   // Data state
   const [kFactorData, setKFactorData] = useState<KFactorData | null>(null);
   const [funnelData, setFunnelData] = useState<FunnelData | null>(null);
+  const [controlFunnelData, setControlFunnelData] = useState<FunnelData | null>(null);
   const [retentionData, setRetentionData] = useState<RetentionData | null>(null);
-  const [viralLoopsData, setViralLoopsData] = useState<ViralLoopsData | null>(null);
   const [cohortData, setCohortData] = useState<CohortComparisonData | null>(null);
   const [agentLogs, setAgentLogs] = useState<AgentLogsData | null>(null);
   const [fraudEvents, setFraudEvents] = useState<EventData | null>(null);
@@ -190,20 +171,22 @@ export default function Dashboard() {
       const queryString = params.toString();
       
       // Fetch all metrics in parallel
-      const [kFactor, funnel, retention, viralLoops, cohort] = await Promise.all([
+      const [kFactor, treatmentFunnel, controlFunnel, retention, cohort] = await Promise.all([
         fetch(`/api/metrics/k-factor?${queryString}`).then(r => r.json()),
-        fetch(`/api/metrics/funnel?${queryString}`).then(r => r.json()),
+        // Always fetch treatment funnel (viral loops)
+        fetch(`/api/metrics/funnel?${params.toString()}&cohort=treatment`).then(r => r.json()),
+        // Always fetch control funnel (traditional referral)
+        fetch(`/api/metrics/funnel?${params.toString()}&cohort=control`).then(r => r.json()),
         fetch(`/api/metrics/retention?${queryString}`).then(r => r.json()),
-        fetch(`/api/metrics/viral-loops?${queryString}`).then(r => r.json()),
         selectedCohort === "all" 
           ? fetch(`/api/metrics/cohort-comparison?${params.toString().replace('cohort=all', '')}`).then(r => r.json())
           : Promise.resolve(null)
       ]);
       
       setKFactorData(kFactor);
-      setFunnelData(funnel);
+      setFunnelData(treatmentFunnel);
+      setControlFunnelData(controlFunnel);
       setRetentionData(retention);
-      setViralLoopsData(viralLoops);
       setCohortData(cohort);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch metrics");
@@ -442,248 +425,161 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Funnel */}
-          {funnelData && funnelData.funnel && Array.isArray(funnelData.funnel) && (
-            <div style={{
-              padding: "24px",
-              background: "white",
-              border: "1px solid #e0e0e0",
-              borderRadius: "8px",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.05)"
-            }}>
-              <h2 style={{ 
-                fontSize: theme.typography.fontSize.xl, 
-                fontWeight: theme.typography.fontWeight.semibold, 
-                marginBottom: "16px",
-                color: theme.colors.gray[800]
+          {/* Funnels Side by Side */}
+          {funnelData && controlFunnelData && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+              {/* Viral Funnel (Treatment) */}
+              <div style={{
+                padding: "24px",
+                background: "white",
+                border: "1px solid #e0e0e0",
+                borderRadius: "8px",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.05)"
               }}>
-                Viral Funnel
-              </h2>
-              
-              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                {funnelData.funnel.map((stage, idx) => (
-                  <div key={stage.stage} style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "16px",
-                    padding: "12px",
-                    background: "#f9f9f9",
-                    borderRadius: "4px"
-                  }}>
-                    <div style={{ minWidth: "150px", fontSize: "14px", fontWeight: "500" }}>
-                      {stage.stage.replace(".", " → ")}
-                    </div>
-                    <div style={{ flex: 1, height: "24px", background: "#e0e0e0", borderRadius: "4px", overflow: "hidden" }}>
-                      <div style={{
-                        height: "100%",
-                        width: `${stage.percentage}%`,
-                        background: `hsl(${200 + idx * 20}, 70%, 50%)`,
-                        transition: "width 0.3s"
-                      }} />
-                    </div>
-                    <div style={{ minWidth: "80px", textAlign: "right", fontSize: "14px", fontWeight: "500" }}>
-                      {stage.count} ({stage.percentage.toFixed(1)}%)
-                    </div>
-                    {stage.conversionFromPrevious !== null && (
-                      <div style={{ minWidth: "60px", textAlign: "right", fontSize: "12px", color: "#666" }}>
-                        {stage.conversionFromPrevious.toFixed(1)}% ↓
-                      </div>
-                    )}
-                  </div>
-                ))}
+                <h2 style={{ 
+                  fontSize: theme.typography.fontSize.xl, 
+                  fontWeight: theme.typography.fontWeight.semibold, 
+                  marginBottom: "16px",
+                  color: theme.colors.gray[800]
+                }}>
+                  Viral Funnel
+                </h2>
                 
-                {/* Final Conversion Rate */}
-                {funnelData.summary?.finalConversion !== undefined && (
-                  <div style={{
-                    marginTop: "16px",
-                    padding: "16px",
-                    background: "#f0f9ff",
-                    border: "2px solid #0ea5e9",
-                    borderRadius: "8px",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center"
-                  }}>
-                    <div style={{ fontSize: "16px", fontWeight: "600", color: "#0369a1" }}>
-                      Final Conversion Rate
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {funnelData.funnel.map((stage, idx) => (
+                    <div key={stage.stage} style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "16px",
+                      padding: "12px",
+                      background: "#f9f9f9",
+                      borderRadius: "4px"
+                    }}>
+                      <div style={{ minWidth: "150px", fontSize: "14px", fontWeight: "500" }}>
+                        {stage.stage.replace(".", " → ")}
+                      </div>
+                      <div style={{ flex: 1, height: "24px", background: "#e0e0e0", borderRadius: "4px", overflow: "hidden" }}>
+                        <div style={{
+                          height: "100%",
+                          width: `${stage.percentage}%`,
+                          background: `hsl(${200 + idx * 20}, 70%, 50%)`,
+                          transition: "width 0.3s"
+                        }} />
+                      </div>
+                      <div style={{ minWidth: "80px", textAlign: "right", fontSize: "14px", fontWeight: "500" }}>
+                        {stage.count} ({stage.percentage.toFixed(1)}%)
+                      </div>
+                      {stage.conversionFromPrevious !== null && (
+                        <div style={{ minWidth: "60px", textAlign: "right", fontSize: "12px", color: "#666" }}>
+                          {stage.conversionFromPrevious.toFixed(1)}% ↓
+                        </div>
+                      )}
                     </div>
-                    <div style={{ fontSize: "24px", fontWeight: "700", color: "#0284c7" }}>
-                      {funnelData.summary.finalConversion.toFixed(2)}%
+                  ))}
+                  
+                  {/* Final Conversion Rate */}
+                  {funnelData.summary?.finalConversion !== undefined && (
+                    <div style={{
+                      marginTop: "16px",
+                      padding: "16px",
+                      background: "#f0f9ff",
+                      border: "2px solid #0ea5e9",
+                      borderRadius: "8px",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center"
+                    }}>
+                      <div style={{ fontSize: "16px", fontWeight: "600", color: "#0369a1" }}>
+                        Final Conversion Rate
+                      </div>
+                      <div style={{ fontSize: "24px", fontWeight: "700", color: "#0284c7" }}>
+                        {funnelData.summary.finalConversion.toFixed(2)}%
+                      </div>
+                      <div style={{ fontSize: "12px", color: "#64748b" }}>
+                        ({funnelData.summary.totalFvmReached} / {funnelData.summary.totalInvitesSent})
+                      </div>
                     </div>
-                    <div style={{ fontSize: "12px", color: "#64748b" }}>
-                      ({funnelData.summary.totalFvmReached} / {funnelData.summary.totalInvitesSent})
+                  )}
+                </div>
+              </div>
+
+              {/* Control Funnel */}
+              <div style={{
+                padding: "24px",
+                background: "white",
+                border: "1px solid #e0e0e0",
+                borderRadius: "8px",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.05)"
+              }}>
+                <h2 style={{ 
+                  fontSize: theme.typography.fontSize.xl, 
+                  fontWeight: theme.typography.fontWeight.semibold, 
+                  marginBottom: "16px",
+                  color: theme.colors.gray[800]
+                }}>
+                  Control Funnel
+                </h2>
+                
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {controlFunnelData.funnel.map((stage, idx) => (
+                    <div key={stage.stage} style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "16px",
+                      padding: "12px",
+                      background: "#f9f9f9",
+                      borderRadius: "4px"
+                    }}>
+                      <div style={{ minWidth: "150px", fontSize: "14px", fontWeight: "500" }}>
+                        {stage.stage.replace(".", " → ")}
+                      </div>
+                      <div style={{ flex: 1, height: "24px", background: "#e0e0e0", borderRadius: "4px", overflow: "hidden" }}>
+                        <div style={{
+                          height: "100%",
+                          width: `${stage.percentage}%`,
+                          background: `hsl(${0 + idx * 10}, 0%, ${50 - idx * 5}%)`,
+                          transition: "width 0.3s"
+                        }} />
+                      </div>
+                      <div style={{ minWidth: "80px", textAlign: "right", fontSize: "14px", fontWeight: "500" }}>
+                        {stage.count} ({stage.percentage.toFixed(1)}%)
+                      </div>
+                      {stage.conversionFromPrevious !== null && (
+                        <div style={{ minWidth: "60px", textAlign: "right", fontSize: "12px", color: "#666" }}>
+                          {stage.conversionFromPrevious.toFixed(1)}% ↓
+                        </div>
+                      )}
                     </div>
-                  </div>
-                )}
+                  ))}
+                  
+                  {/* Final Conversion Rate */}
+                  {controlFunnelData.summary?.finalConversion !== undefined && (
+                    <div style={{
+                      marginTop: "16px",
+                      padding: "16px",
+                      background: "#f5f5f5",
+                      border: "2px solid #9ca3af",
+                      borderRadius: "8px",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center"
+                    }}>
+                      <div style={{ fontSize: "16px", fontWeight: "600", color: "#4b5563" }}>
+                        Final Conversion Rate
+                      </div>
+                      <div style={{ fontSize: "24px", fontWeight: "700", color: "#6b7280" }}>
+                        {controlFunnelData.summary.finalConversion.toFixed(2)}%
+                      </div>
+                      <div style={{ fontSize: "12px", color: "#64748b" }}>
+                        ({controlFunnelData.summary.totalFvmReached} / {controlFunnelData.summary.totalInvitesSent})
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
 
-          {/* Viral Loops Breakdown */}
-          {viralLoopsData && (
-            <div style={{
-              padding: "24px",
-              background: "white",
-              border: "1px solid #e0e0e0",
-              borderRadius: "8px",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.05)"
-            }}>
-              <h2 style={{ 
-                fontSize: theme.typography.fontSize.xl, 
-                fontWeight: theme.typography.fontWeight.semibold, 
-                marginBottom: "16px",
-                color: theme.colors.gray[800]
-              }}>
-                Viral Loop Performance
-              </h2>
-
-              {/* Treatment Group Loops */}
-              {viralLoopsData.treatment && viralLoopsData.treatment.length > 0 && (
-                <div>
-                  <h3 style={{ fontSize: "16px", fontWeight: "600", marginBottom: "12px", color: "#0070f3" }}>
-                    Treatment Group (with viral loop features)
-                  </h3>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "16px", marginBottom: "24px" }}>
-                    {viralLoopsData.treatment.map(loop => (
-                      <div key={loop.loop} style={{
-                        padding: "16px",
-                        background: "#f8faff",
-                        border: "1px solid #d0e0ff",
-                        borderRadius: "8px"
-                      }}>
-                        <div style={{ fontSize: "16px", fontWeight: "600", marginBottom: "12px" }}>
-                          {loop.displayName}
-                        </div>
-                        
-                        {/* Mini Funnel */}
-                        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
-                          <div style={{ fontSize: "12px", display: "flex", justifyContent: "space-between" }}>
-                            <span>Invites Sent</span>
-                            <span style={{ fontWeight: "600" }}>{loop.invitesSent}</span>
-                          </div>
-                          <div style={{ height: "6px", background: "#e0e0e0", borderRadius: "3px", overflow: "hidden" }}>
-                            <div style={{ height: "100%", width: "100%", background: "#0070f3" }} />
-                          </div>
-
-                          <div style={{ fontSize: "12px", display: "flex", justifyContent: "space-between" }}>
-                            <span>Opened ({(loop.openRate * 100).toFixed(1)}%)</span>
-                            <span style={{ fontWeight: "600" }}>{loop.invitesOpened}</span>
-                          </div>
-                          <div style={{ height: "6px", background: "#e0e0e0", borderRadius: "3px", overflow: "hidden" }}>
-                            <div style={{ height: "100%", width: `${loop.openRate * 100}%`, background: "#00a6ff" }} />
-                          </div>
-
-                          <div style={{ fontSize: "12px", display: "flex", justifyContent: "space-between" }}>
-                            <span>Account Created ({(loop.conversionRate * 100).toFixed(1)}%)</span>
-                            <span style={{ fontWeight: "600" }}>{loop.accountsCreated}</span>
-                          </div>
-                          <div style={{ height: "6px", background: "#e0e0e0", borderRadius: "3px", overflow: "hidden" }}>
-                            <div style={{ height: "100%", width: `${loop.conversionRate * 100}%`, background: "#00d084" }} />
-                          </div>
-
-                          <div style={{ fontSize: "12px", display: "flex", justifyContent: "space-between" }}>
-                            <span>FVM Reached ({(loop.fvmRate * 100).toFixed(1)}%)</span>
-                            <span style={{ fontWeight: "600" }}>{loop.fvmReached}</span>
-                          </div>
-                          <div style={{ height: "6px", background: "#e0e0e0", borderRadius: "3px", overflow: "hidden" }}>
-                            <div style={{ height: "100%", width: `${loop.fvmRate * 100}%`, background: "#10b981" }} />
-                          </div>
-                        </div>
-
-                        {/* Final Conversion Rate */}
-                        <div style={{
-                          marginTop: "12px",
-                          paddingTop: "12px",
-                          borderTop: "1px solid #d0e0ff",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center"
-                        }}>
-                          <span style={{ fontSize: "12px", color: "#666" }}>Final Conversion</span>
-                          <span style={{ fontSize: "20px", fontWeight: "bold", color: loop.kFactor >= 0.05 ? "#00d084" : "#666" }}>
-                            {(loop.kFactor * 100).toFixed(1)}%
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Control Group */}
-              {viralLoopsData.control && viralLoopsData.control.length > 0 && (
-                <div>
-                  <h3 style={{ fontSize: "16px", fontWeight: "600", marginBottom: "12px", color: "#666" }}>
-                    Control Group (traditional referral only)
-                  </h3>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "16px" }}>
-                    {viralLoopsData.control.map(loop => (
-                      <div key={loop.loop} style={{
-                        padding: "16px",
-                        background: "#f9f9f9",
-                        border: "1px solid #e0e0e0",
-                        borderRadius: "8px"
-                      }}>
-                        <div style={{ fontSize: "16px", fontWeight: "600", marginBottom: "12px" }}>
-                          {loop.displayName}
-                        </div>
-                        
-                        {/* Mini Funnel */}
-                        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
-                          <div style={{ fontSize: "12px", display: "flex", justifyContent: "space-between" }}>
-                            <span>Invites Sent</span>
-                            <span style={{ fontWeight: "600" }}>{loop.invitesSent}</span>
-                          </div>
-                          <div style={{ height: "6px", background: "#e0e0e0", borderRadius: "3px", overflow: "hidden" }}>
-                            <div style={{ height: "100%", width: "100%", background: "#666" }} />
-                          </div>
-
-                          <div style={{ fontSize: "12px", display: "flex", justifyContent: "space-between" }}>
-                            <span>Opened ({(loop.openRate * 100).toFixed(1)}%)</span>
-                            <span style={{ fontWeight: "600" }}>{loop.invitesOpened}</span>
-                          </div>
-                          <div style={{ height: "6px", background: "#e0e0e0", borderRadius: "3px", overflow: "hidden" }}>
-                            <div style={{ height: "100%", width: `${loop.openRate * 100}%`, background: "#888" }} />
-                          </div>
-
-                          <div style={{ fontSize: "12px", display: "flex", justifyContent: "space-between" }}>
-                            <span>Account Created ({(loop.conversionRate * 100).toFixed(1)}%)</span>
-                            <span style={{ fontWeight: "600" }}>{loop.accountsCreated}</span>
-                          </div>
-                          <div style={{ height: "6px", background: "#e0e0e0", borderRadius: "3px", overflow: "hidden" }}>
-                            <div style={{ height: "100%", width: `${loop.conversionRate * 100}%`, background: "#999" }} />
-                          </div>
-
-                          <div style={{ fontSize: "12px", display: "flex", justifyContent: "space-between" }}>
-                            <span>FVM Reached ({(loop.fvmRate * 100).toFixed(1)}%)</span>
-                            <span style={{ fontWeight: "600" }}>{loop.fvmReached}</span>
-                          </div>
-                          <div style={{ height: "6px", background: "#e0e0e0", borderRadius: "3px", overflow: "hidden" }}>
-                            <div style={{ height: "100%", width: `${loop.fvmRate * 100}%`, background: "#aaa" }} />
-                          </div>
-                        </div>
-
-                        {/* Final Conversion Rate */}
-                        <div style={{
-                          marginTop: "12px",
-                          paddingTop: "12px",
-                          borderTop: "1px solid #e0e0e0",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center"
-                        }}>
-                          <span style={{ fontSize: "12px", color: "#666" }}>Final Conversion</span>
-                          <span style={{ fontSize: "20px", fontWeight: "bold", color: "#666" }}>
-                            {(loop.kFactor * 100).toFixed(1)}%
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
 
           {/* Agent Logs Toggle */}
           <div style={{
