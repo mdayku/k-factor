@@ -490,6 +490,30 @@ export default function Dashboard() {
                     )}
                   </div>
                 ))}
+                
+                {/* Final Conversion Rate */}
+                {funnelData.summary?.finalConversion !== undefined && (
+                  <div style={{
+                    marginTop: "16px",
+                    padding: "16px",
+                    background: "#f0f9ff",
+                    border: "2px solid #0ea5e9",
+                    borderRadius: "8px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center"
+                  }}>
+                    <div style={{ fontSize: "16px", fontWeight: "600", color: "#0369a1" }}>
+                      Final Conversion Rate
+                    </div>
+                    <div style={{ fontSize: "24px", fontWeight: "700", color: "#0284c7" }}>
+                      {funnelData.summary.finalConversion.toFixed(2)}%
+                    </div>
+                    <div style={{ fontSize: "12px", color: "#64748b" }}>
+                      ({funnelData.summary.totalFvmReached} / {funnelData.summary.totalInvitesSent})
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

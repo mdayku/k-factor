@@ -159,6 +159,7 @@ export async function GET(request: NextRequest) {
         totalInvitesSent: invitesSent,
         totalFvmReached: fvmReachedCount,
         overallConversion: overallConversion,
+        finalConversion: invitesSent > 0 ? (fvmReachedCount / invitesSent) * 100 : 0,
         dropoffs: {
           sentToOpened: invitesSent - invitesOpened,
           openedToSignup: invitesOpened - accountsCreated,

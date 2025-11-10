@@ -93,13 +93,14 @@ async function calculateLoopMetrics(
       .map((e: any) => e.metadata?.signedLinkId)
       .filter(Boolean) as string[];
 
-    // 2. Count invite.opened events for these signedLinkIds
+    // 2. Count invite.opened events for these signedLinkIds AND this loop
     const invitesOpenedResult = signedLinkIds.length > 0 ? await prisma.$queryRaw<Array<{count: bigint}>>`
       SELECT COUNT(*)::int as count
       FROM "Event"
       WHERE "type" = 'invite.opened'
         AND "isSimulated" = true
         AND "metadata"->>'signedLinkId' IN (${Prisma.join(signedLinkIds)})
+        AND "metadata"->>'loop' = ${loop.key}
     ` : [{count: BigInt(0)}];
     const invitesOpened = Number(invitesOpenedResult[0].count);
 
