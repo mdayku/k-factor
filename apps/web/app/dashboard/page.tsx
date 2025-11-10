@@ -40,6 +40,7 @@ interface FunnelData {
     totalInvitesSent: number;
     totalFvmReached: number;
     overallConversion: number;
+    finalConversion: number;
   };
 }
 
